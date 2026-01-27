@@ -40,7 +40,7 @@ struct AndroidToolchain {
             throw ToolchainError.toolNotFound("adb")
         }
     }
-
+    
     private static func resolveSdkPath(preferred: String) -> String? {
         let fm = FileManager.default
 
@@ -48,19 +48,31 @@ struct AndroidToolchain {
             (p.trimmingCharacters(in: .whitespacesAndNewlines) as NSString).expandingTildeInPath
         }
 
-        // 1) User-provided
+        func isValidSdk(_ path: String) -> Bool {
+            fm.fileExists(atPath: path + "/platform-tools/adb") &&
+            fm.fileExists(atPath: path + "/emulator/emulator")
+        }
+
+        // 1) User-provided (if any)
         let p = norm(preferred)
-        if !p.isEmpty, fm.fileExists(atPath: p) { return p }
+        if !p.isEmpty, isValidSdk(p) { return p }
 
-        // 2) Env vars (may not exist in GUI apps, but check)
+        // 2) Env vars (sometimes present)
         let env = ProcessInfo.processInfo.environment
-        if let e = env["ANDROID_SDK_ROOT"].map(norm), fm.fileExists(atPath: e) { return e }
-        if let e = env["ANDROID_HOME"].map(norm), fm.fileExists(atPath: e) { return e }
+        if let e = env["ANDROID_SDK_ROOT"].map(norm), isValidSdk(e) { return e }
+        if let e = env["ANDROID_HOME"].map(norm), isValidSdk(e) { return e }
 
-        // 3) Default Android Studio path on macOS
-        let def = norm("~/Library/Android/sdk")
-        if fm.fileExists(atPath: def) { return def }
+        // 3) Common macOS default (dynamic per-user)
+        let def = defaultMacSdkPath()
+        if isValidSdk(def) { return def }
 
         return nil
     }
+
+    static func defaultMacSdkPath() -> String {
+        FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/Android/sdk")
+            .path
+    }
+
 }

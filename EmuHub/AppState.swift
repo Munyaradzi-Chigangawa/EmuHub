@@ -16,7 +16,7 @@ final class AppState: ObservableObject {
     @Published var isRefreshing = false
     @Published var lastError: String?
 
-    @AppStorage("sdkPath") var sdkPath: String = "/Users/mchigangawa/Library/Android/sdk"  // e.g. /Users/you/Library/Android/sdk
+    @AppStorage("sdkPath") var sdkPath: String =  "" // e.g. /Users/you/Library/Android/sdk
     @AppStorage("emulatorExtraArgs") var emulatorExtraArgs: String = "-no-snapshot-load"
     @AppStorage("autoRefreshSeconds") var autoRefreshSeconds: Double = 10
 
@@ -42,6 +42,7 @@ final class AppState: ObservableObject {
     }
 
     func refreshAll() async {
+        ensureSdkPath()
         isRefreshing = true
         defer { isRefreshing = false }
 
@@ -60,6 +61,7 @@ final class AppState: ObservableObject {
 
     func start(avd: AVD) async {
         do {
+            ensureSdkPath()
             let toolchain = try AndroidToolchain(sdkPath: sdkPath)
             let args = emulatorExtraArgs
                 .split(separator: " ")
@@ -82,11 +84,24 @@ final class AppState: ObservableObject {
 
     func stop(running: RunningEmulator) async {
         do {
+            ensureSdkPath()
             let toolchain = try AndroidToolchain(sdkPath: sdkPath)
             try await adbService.stopEmulator(adbPath: toolchain.adbPath, serial: running.serial)
             await refreshAll()
         } catch {
             lastError = error.localizedDescription
+        }
+    }
+    
+    private func ensureSdkPath() {
+        let fm = FileManager.default
+
+        // If empty OR path no longer exists, try auto-detect
+        if sdkPath.isEmpty || !fm.fileExists(atPath: sdkPath) {
+            let auto = AndroidToolchain.defaultMacSdkPath()
+            if fm.fileExists(atPath: auto) {
+                sdkPath = auto
+            }
         }
     }
 }

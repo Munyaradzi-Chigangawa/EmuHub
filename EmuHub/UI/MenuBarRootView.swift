@@ -1,10 +1,10 @@
-////
-////  MenuBarRootView.swift
-////  EmuHub
-////
-////  Created by Munyaradzi Chigangawa on 27/1/2026.
-////
 //
+//  MenuBarRootView.swift
+//  EmuHub
+//
+//  Created by Munyaradzi Chigangawa on 27/1/2026.
+//
+
 //import SwiftUI
 //
 //struct MenuBarRootView: View {
@@ -98,13 +98,13 @@
 //}
 
 
-//
+
 //  MenuBarRootView.swift
 //  EmuHub
 //
 //  Created by Munyaradzi Chigangawa on 27/1/2026.
 //  Redesigned for clean, minimalistic, elegant professional aesthetic
-//
+
 
 import SwiftUI
 
@@ -556,7 +556,7 @@ struct MenuBarRootView: View {
 
 // MARK: - Preview
 
-//#Preview {
-//    MenuBarRootView()
-//        .environmentObject(AppState())
-//}
+#Preview {
+    MenuBarRootView()
+        .environmentObject(AppState())
+}
