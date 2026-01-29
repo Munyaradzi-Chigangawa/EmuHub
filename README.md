@@ -1,10 +1,3 @@
-//
-//  README.md
-//  EmuHub
-//
-//  Created by Munyaradzi Chigangawa on 29/1/2026.
-//
-
 # EmuHub
 
 EmuHub is a lightweight macOS **menu bar utility** for managing Android Emulators (AVDs).
@@ -25,14 +18,6 @@ It allows you to start, monitor, and stop Android emulators directly from the ma
 - Launch at login support
 
 ---
-
-//## 📸 Preview
-//
-//> EmuHub runs entirely from the macOS menu bar, similar to developer utilities like IDE toolboxes.
-//
-//*(Screenshots/GIFs can be added here in future releases)*
-//
-//---
 
 ## 📦 Installation
 
