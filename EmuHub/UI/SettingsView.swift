@@ -37,6 +37,24 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
             }
 
+            Section("About") {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("EmuHub")
+                        .font(.headline)
+                    Text("Android emulator and device manager for macOS menu bar.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Text("Version \(appVersion)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.vertical, 2)
+
+                Link("Project Repository", destination: URL(string: "https://github.com/Munyaradzi-Chigangawa/EmuHub")!)
+                Link("Release Notes / Changelog", destination: URL(string: "https://github.com/Munyaradzi-Chigangawa/EmuHub/blob/main/CHANGELOG.md")!)
+                Link("License (MIT)", destination: URL(string: "https://github.com/Munyaradzi-Chigangawa/EmuHub/blob/main/LICENSE")!)
+            }
+
             Section {
                 Button("Refresh Now") {
                     Task { await state.refreshAll() }
@@ -45,5 +63,11 @@ struct SettingsView: View {
         }
         .padding()
         .frame(width: 520)
+    }
+
+    private var appVersion: String {
+        let short = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "-"
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "-"
+        return "\(short) (\(build))"
     }
 }

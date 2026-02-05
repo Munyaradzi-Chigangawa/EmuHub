@@ -14,7 +14,11 @@ struct MenuBarRootView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            HeaderView(runningCount: state.running.count)
+            HeaderView(
+                runningCount: state.running.count,
+                emulatorCount: state.running.filter(\.isEmulator).count,
+                physicalCount: state.running.filter { !$0.isEmulator }.count
+            )
             
             Divider().opacity(0.1)
             
@@ -32,7 +36,7 @@ struct MenuBarRootView: View {
                     
                     RunningSectionView(
                         devices: state.running,
-                        hoveredEmulator: $hoveredEmulator,
+                        hoveredDevice: $hoveredEmulator,
                         onStop: { device in
                             Task { await state.stop(device: device) }
                         }
@@ -56,6 +60,7 @@ struct MenuBarRootView: View {
             
             FooterView(
                 isRefreshing: state.isRefreshing,
+                lastRefreshAt: state.lastRefreshAt,
                 onRefresh: {
                     Task { await state.refreshAll() }
                 }
@@ -77,23 +82,31 @@ struct MenuBarRootView: View {
 
 private struct HeaderView: View {
     let runningCount: Int
+    let emulatorCount: Int
+    let physicalCount: Int
     
     var body: some View {
         HStack(spacing: 12) {
             AppIconView()
             
             VStack(alignment: .leading, spacing: 2) {
-                Text("EmuBar")
+                Text("EmuHub")
                     .font(.system(size: 15, weight: .semibold, design: .rounded))
                 
-                Text("Emulator Manager")
+                Text("Android Device Manager")
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(.secondary)
             }
             
             Spacer()
-            
-            StatusBadge(count: runningCount)
+
+            VStack(alignment: .trailing, spacing: 2) {
+                StatusBadge(count: runningCount)
+
+                Text("\(emulatorCount) emu • \(physicalCount) phone")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
         }
         .padding(.horizontal, 20)
         .padding(.top, 16)
@@ -184,7 +197,7 @@ private struct ErrorBanner: View {
 
 private struct RunningSectionView: View {
     let devices: [RunningDevice]
-    @Binding var hoveredEmulator: String?
+    @Binding var hoveredDevice: String?
     let onStop: (RunningDevice) -> Void
     
     var body: some View {
@@ -196,17 +209,17 @@ private struct RunningSectionView: View {
             if devices.isEmpty {
                 EmptyStateView(
                     icon: "moon.zzz.fill",
-                    message: "No active emulators"
+                    message: "No connected devices"
                 )
             } else {
                 VStack(spacing: 8) {
                     ForEach(devices) { device in
                         DeviceCard(
                             device: device,
-                            isHovered: hoveredEmulator == device.serial,
+                            isHovered: hoveredDevice == device.serial,
                             onHover: { hovering in
                                 withAnimation(.easeInOut(duration: 0.2)) {
-                                    hoveredEmulator = hovering ? device.serial : nil
+                                    hoveredDevice = hovering ? device.serial : nil
                                 }
                             },
                             onStop: { onStop(device) }
@@ -417,7 +430,9 @@ private struct DeviceStatusLabel: View {
     }
     
     private var labelText: String {
-        device.isUnauthorized ? "Authorize" : "Connected"
+        if device.isUnauthorized { return "Authorize" }
+        if device.isOffline { return "Offline" }
+        return "Connected"
     }
 }
 
@@ -523,6 +538,7 @@ private struct EmptyStateView: View {
 
 private struct FooterView: View {
     let isRefreshing: Bool
+    let lastRefreshAt: Date?
     let onRefresh: () -> Void
     
     var body: some View {
@@ -531,6 +547,13 @@ private struct FooterView: View {
                 isRefreshing: isRefreshing,
                 onRefresh: onRefresh
             )
+
+            if let lastRefreshAt {
+                Text("Updated \(lastRefreshAt, style: .relative)")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
             
             Spacer()
             
