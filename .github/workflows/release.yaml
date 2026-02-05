@@ -1,45 +1,44 @@
-//name: Release (macOS)
-//
-//on:
-//  push:
-//    tags:
-//      - "v*.*.*"   # e.g. v1.0.0
-//
-//permissions:
-//  contents: write
-//
-//jobs:
-//  release:
-//    runs-on: macos-latest
-//
-//    steps:
-//      - uses: actions/checkout@v4
-//
-//      - name: Build (Release)
-//        run: |
-//          xcodebuild \
-//            -project EmuHub.xcodeproj \
-//            -scheme EmuHub \
-//            -configuration Release \
-//            -derivedDataPath build \
-//            clean build
-//
-//      - name: Package .app
-//        run: |
-//          APP_PATH="build/Build/Products/Release/EmuHub.app"
-//          ZIP_NAME="EmuHub-${GITHUB_REF_NAME}.zip"
-//          ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$ZIP_NAME"
-//          echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
-//
-//      - name: Create GitHub Release and upload asset
-//        env:
-//          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-//        run: |
-//          gh release create "$GITHUB_REF_NAME" \
-//            --title "EmuHub $GITHUB_REF_NAME" \
-//            --generate-notes \
-//            "$ZIP_NAME"
-//
+# name: Release (macOS)
+#
+# on:
+#   push:
+#     tags:
+#       - "v*.*.*"   # e.g. v1.0.0
+#
+# permissions:
+#   contents: write
+#
+# jobs:
+#   release:
+#     runs-on: macos-latest
+#
+#     steps:
+#       - uses: actions/checkout@v4
+#
+#       - name: Build (Release)
+#         run: |
+#           xcodebuild \
+#             -project EmuHub.xcodeproj \
+#             -scheme EmuHub \
+#             -configuration Release \
+#             -derivedDataPath build \
+#             clean build
+#
+#       - name: Package .app
+#         run: |
+#           APP_PATH="build/Build/Products/Release/EmuHub.app"
+#           ZIP_NAME="EmuHub-${GITHUB_REF_NAME}.zip"
+#           ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$ZIP_NAME"
+#           echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
+#
+#       - name: Create GitHub Release and upload asset
+#         env:
+#           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#         run: |
+#           gh release create "$GITHUB_REF_NAME" \
+#             --title "EmuHub $GITHUB_REF_NAME" \
+#             --generate-notes \
+#             "$ZIP_NAME"
 
 
 name: Release (macOS)
@@ -65,7 +64,7 @@ jobs:
             -project EmuHub.xcodeproj \
             -scheme EmuHub \
             -configuration Release \
-            -destination 'platform=macOS' \
+            -destination "platform=macOS" \
             -derivedDataPath build \
             clean build \
             CODE_SIGNING_ALLOWED=NO \
@@ -88,3 +87,4 @@ jobs:
             --title "EmuHub $GITHUB_REF_NAME" \
             --generate-notes \
             "$ZIP_NAME"
+
