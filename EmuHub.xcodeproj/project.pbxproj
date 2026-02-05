@@ -29,6 +29,7 @@
 		856B5ACE2F289D2B00BBA8A7 /* EmuHubUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EmuHubUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8599993F2F2B6AB5005E5A14 /* CHANGELOG.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CHANGELOG.md; sourceTree = "<group>"; };
 		859999412F2B6CE3005E5A14 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		859999BE2F34DBFF005E5A14 /* CONTRIBUTING.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CONTRIBUTING.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -45,11 +46,6 @@
 		856B5AD12F289D2B00BBA8A7 /* EmuHubUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = EmuHubUITests;
-			sourceTree = "<group>";
-		};
-		8599996D2F34B37D005E5A14 /* .github */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = .github;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -82,12 +78,12 @@
 		856B5AAC2F289D2900BBA8A7 = {
 			isa = PBXGroup;
 			children = (
-				8599996D2F34B37D005E5A14 /* .github */,
 				856B5AB72F289D2900BBA8A7 /* EmuHub */,
 				856B5AC72F289D2B00BBA8A7 /* EmuHubTests */,
 				856B5AD12F289D2B00BBA8A7 /* EmuHubUITests */,
 				856B5AB62F289D2900BBA8A7 /* Products */,
 				859999412F2B6CE3005E5A14 /* README.md */,
+				859999BE2F34DBFF005E5A14 /* CONTRIBUTING.md */,
 				8599993F2F2B6AB5005E5A14 /* CHANGELOG.md */,
 			);
 			sourceTree = "<group>";
@@ -426,7 +422,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.1.1;
+				MARKETING_VERSION = 1.1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = zw.co.munyaradzichigangawa.EmuHub;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -473,7 +469,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.1.1;
+				MARKETING_VERSION = 1.1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = zw.co.munyaradzichigangawa.EmuHub;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
