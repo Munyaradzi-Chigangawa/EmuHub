@@ -6,6 +6,10 @@ It allows you to start, monitor, and stop Android emulators directly from the ma
 
 ---
 
+## Screenshots
+
+![Menu Bar](docs/screenshots/EmuHub.png)
+
 ## ✨ Features
 
 - macOS menu bar–only application
