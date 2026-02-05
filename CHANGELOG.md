@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [Unreleased]
+### Planned
+- Developer ID signing and macOS notarization
+- Homebrew cask installation
+- Advanced emulator controls (cold boot, wipe data)
+- Automatic update mechanism
+- Grouped display of emulators and physical devices
+- In-app help for USB debugging authorization
+- Improved diagnostics and logging
+
+---
+
+## [1.1.2] - 2026-02-05
+### Added
+- Automated macOS CI build using GitHub Actions
+- Automatic version tagging based on app version
+- Automated GitHub Releases with downloadable `.app` archive
+- CONTRIBUTING guidelines for open-source contributors
+- Pull Request template
+- CODEOWNERS file for repository governance
+
+### Changed
+- Introduced `dev → main` workflow for releases
+- Enforced branch protection rules on `main`
+- Improved open-source readiness and repository structure
+
+### Fixed
+- CI build failures caused by macOS signing requirements
+- Release workflow not triggering on version tags
+
+---
+
 ## [1.1.0] - 2026-02-05
 ### Added
 - Display of connected physical Android devices alongside emulators
@@ -41,15 +73,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - This release is signed with an Apple Personal Team and is not notarized
 - macOS may prompt for security approval on first launch
 - Designed for local developer use
-
----
-
-## [Unreleased]
-### Planned
-- Developer ID signing and macOS notarization
-- Homebrew cask installation
-- Advanced emulator controls (cold boot, wipe data)
-- Automatic update mechanism
-- Grouped display of emulators and physical devices
-- In-app help for USB debugging authorization
-- Improved diagnostics and logging
