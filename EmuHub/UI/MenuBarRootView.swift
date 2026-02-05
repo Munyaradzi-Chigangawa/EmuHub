@@ -5,107 +5,6 @@
 //  Created by Munyaradzi Chigangawa on 27/1/2026.
 //
 
-//import SwiftUI
-//
-//struct MenuBarRootView: View {
-//    @EnvironmentObject var state: AppState
-//
-//    var body: some View {
-//        VStack(alignment: .leading, spacing: 10) {
-//            header
-//
-//            if let err = state.lastError {
-//                Text(err)
-//                    .font(.caption)
-//                    .foregroundStyle(.red)
-//                    .fixedSize(horizontal: false, vertical: true)
-//            }
-//
-//            GroupBox("Running") {
-//                if state.running.isEmpty {
-//                    Text("No running emulators.")
-//                        .foregroundStyle(.secondary)
-//                } else {
-//                    ForEach(state.running) { emu in
-//                        HStack {
-//                            VStack(alignment: .leading) {
-//                                Text(emu.serial).font(.body)
-//                                Text(emu.state).font(.caption).foregroundStyle(.secondary)
-//                            }
-//                            Spacer()
-//                            Button("Stop") {
-//                                Task { await state.stop(running: emu) }
-//                            }
-//                        }
-//                        .padding(.vertical, 4)
-//                    }
-//                }
-//            }
-//
-//            GroupBox("Available AVDs") {
-//                if state.avds.isEmpty {
-//                    Text("No AVDs found.")
-//                        .foregroundStyle(.secondary)
-//                } else {
-//                    ForEach(state.avds) { avd in
-//                        HStack {
-//                            Text(avd.name)
-//                            Spacer()
-//                            Button("Start") {
-//                                Task { await state.start(avd: avd) }
-//                            }
-//                        }
-//                        .padding(.vertical, 2)
-//                    }
-//                }
-//            }
-//
-//            Divider()
-//
-//            HStack {
-//                Button(state.isRefreshing ? "Refreshing…" : "Refresh") {
-//                    Task { await state.refreshAll() }
-//                }
-//                .disabled(state.isRefreshing)
-//
-//                Spacer()
-//
-//                Button("Quit") { NSApplication.shared.terminate(nil) }
-//            }
-//        }
-//        .padding(12)
-//        .frame(width: 360)
-//        .task {
-//            await state.refreshAll()
-//            state.startAutoRefresh()
-//        }
-//        .onDisappear {
-//            state.stopAutoRefresh()
-//        }
-//    }
-//
-//    private var header: some View {
-//        HStack {
-//            VStack(alignment: .leading) {
-//                Text("EmuBar").font(.headline)
-//                Text("Android Emulator Manager").font(.caption).foregroundStyle(.secondary)
-//            }
-//            Spacer()
-//            Image(systemName: "dot.radiowaves.left.and.right")
-//                .foregroundStyle(.secondary)
-//        }
-//    }
-//}
-
-
-
-//  MenuBarRootView.swift
-//  EmuHub
-//
-//  Created by Munyaradzi Chigangawa on 27/1/2026.
-//  Redesigned for clean, minimalistic, elegant professional aesthetic
-
-
 import SwiftUI
 
 struct MenuBarRootView: View {
@@ -115,20 +14,14 @@ struct MenuBarRootView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Header
-            header
-                .padding(.horizontal, 20)
-                .padding(.top, 16)
-                .padding(.bottom, 12)
+            HeaderView(runningCount: state.running.count)
             
-            Divider()
-                .opacity(0.1)
+            Divider().opacity(0.1)
             
             ScrollView {
                 VStack(spacing: 20) {
-                    // Error Banner
                     if let errorMessage = state.lastError {
-                        errorBanner(message: errorMessage)
+                        ErrorBanner(message: errorMessage)
                             .padding(.horizontal, 20)
                             .padding(.top, 16)
                             .transition(.asymmetric(
@@ -137,40 +30,39 @@ struct MenuBarRootView: View {
                             ))
                     }
                     
-                    // Running Section
-                    sectionContainer(
-                        title: "Running",
-                        systemImage: "bolt.circle.fill",
-                        accentColor: .green
-                    ) {
-                        runningContent
-                    }
+                    RunningSectionView(
+                        devices: state.running,
+                        hoveredEmulator: $hoveredEmulator,
+                        onStop: { device in
+                            Task { await state.stop(device: device) }
+                        }
+                    )
                     .padding(.horizontal, 20)
                     .padding(.top, state.lastError != nil ? 0 : 16)
                     
-                    // Available AVDs Section
-                    sectionContainer(
-                        title: "Available",
-                        systemImage: "square.stack.3d.up.fill",
-                        accentColor: .blue
-                    ) {
-                        avdsContent
-                    }
+                    AVDSectionView(
+                        avds: state.avds,
+                        hoveredAVD: $hoveredAVD,
+                        onStart: { avd in
+                            Task { await state.start(avd: avd) }
+                        }
+                    )
                     .padding(.horizontal, 20)
                     .padding(.bottom, 16)
                 }
             }
             
-            Divider()
-                .opacity(0.1)
+            Divider().opacity(0.1)
             
-            // Footer Actions
-            footer
-                .padding(.horizontal, 20)
-                .padding(.vertical, 12)
+            FooterView(
+                isRefreshing: state.isRefreshing,
+                onRefresh: {
+                    Task { await state.refreshAll() }
+                }
+            )
         }
         .frame(width: 380)
-        .background(backgroundGradient)
+        .background(AppBackground())
         .task {
             await state.refreshAll()
             state.startAutoRefresh()
@@ -179,38 +71,20 @@ struct MenuBarRootView: View {
             state.stopAutoRefresh()
         }
     }
+}
+
+// MARK: - Header Component
+
+private struct HeaderView: View {
+    let runningCount: Int
     
-    // MARK: - Header
-    
-    private var header: some View {
+    var body: some View {
         HStack(spacing: 12) {
-            // Icon
-            ZStack {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [Color.blue.opacity(0.2), Color.purple.opacity(0.2)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: 36, height: 36)
-                
-                Image(systemName: "cpu")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.blue, .purple],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-            }
+            AppIconView()
             
             VStack(alignment: .leading, spacing: 2) {
                 Text("EmuBar")
                     .font(.system(size: 15, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.primary)
                 
                 Text("Emulator Manager")
                     .font(.system(size: 11, weight: .medium))
@@ -219,30 +93,69 @@ struct MenuBarRootView: View {
             
             Spacer()
             
-            // Status Indicator
-            HStack(spacing: 4) {
-                Circle()
-                    .fill(state.running.isEmpty ? Color.secondary.opacity(0.3) : Color.green)
-                    .frame(width: 6, height: 6)
-                    .shadow(color: state.running.isEmpty ? .clear : .green.opacity(0.5), radius: 3)
-                
-                Text("\(state.running.count)")
-                    .font(.system(size: 11, weight: .medium, design: .rounded))
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
-            }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(
-                Capsule()
-                    .fill(Color.secondary.opacity(0.08))
-            )
+            StatusBadge(count: runningCount)
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 16)
+        .padding(.bottom, 12)
+    }
+}
+
+private struct AppIconView: View {
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(
+                    LinearGradient(
+                        colors: [Color.blue.opacity(0.2), Color.purple.opacity(0.2)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: 36, height: 36)
+            
+            Image(systemName: "cpu")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [.blue, .purple],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
         }
     }
+}
+
+private struct StatusBadge: View {
+    let count: Int
     
-    // MARK: - Error Banner
+    private var isActive: Bool { count > 0 }
     
-    private func errorBanner(message: String) -> some View {
+    var body: some View {
+        HStack(spacing: 4) {
+            Circle()
+                .fill(isActive ? Color.green : Color.secondary.opacity(0.3))
+                .frame(width: 6, height: 6)
+                .shadow(color: isActive ? .green.opacity(0.5) : .clear, radius: 3)
+            
+            Text("\(count)")
+                .font(.system(size: 11, weight: .medium, design: .rounded))
+                .foregroundStyle(.secondary)
+                .monospacedDigit()
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(Capsule().fill(Color.secondary.opacity(0.08)))
+    }
+}
+
+// MARK: - Error Banner
+
+private struct ErrorBanner: View {
+    let message: String
+    
+    var body: some View {
         HStack(alignment: .top, spacing: 10) {
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.system(size: 13))
@@ -265,199 +178,322 @@ struct MenuBarRootView: View {
                 )
         )
     }
+}
+
+// MARK: - Running Section
+
+private struct RunningSectionView: View {
+    let devices: [RunningDevice]
+    @Binding var hoveredEmulator: String?
+    let onStop: (RunningDevice) -> Void
     
-    // MARK: - Section Container
-    
-    private func sectionContainer<Content: View>(
-        title: String,
-        systemImage: String,
-        accentColor: Color,
-        @ViewBuilder content: () -> Content
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 8) {
-                Image(systemName: systemImage)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(accentColor)
-                
-                Text(title)
-                    .font(.system(size: 12, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.secondary)
-                    .textCase(.uppercase)
-                    .tracking(0.5)
-                
-                Spacer()
-            }
-            
-            content()
-        }
-    }
-    
-    // MARK: - Running Content
-    
-    @ViewBuilder
-    private var runningContent: some View {
-        if state.running.isEmpty {
-            emptyState(
-                icon: "moon.zzz.fill",
-                message: "No active emulators"
-            )
-        } else {
-            VStack(spacing: 8) {
-                ForEach(state.running) { emu in
-                    emulatorCard(emu: emu)
+    var body: some View {
+        SectionContainer(
+            title: "Running",
+            systemImage: "bolt.circle.fill",
+            accentColor: .green
+        ) {
+            if devices.isEmpty {
+                EmptyStateView(
+                    icon: "moon.zzz.fill",
+                    message: "No active emulators"
+                )
+            } else {
+                VStack(spacing: 8) {
+                    ForEach(devices) { device in
+                        DeviceCard(
+                            device: device,
+                            isHovered: hoveredEmulator == device.serial,
+                            onHover: { hovering in
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    hoveredEmulator = hovering ? device.serial : nil
+                                }
+                            },
+                            onStop: { onStop(device) }
+                        )
+                    }
                 }
             }
         }
     }
+}
+
+// MARK: - AVD Section
+
+private struct AVDSectionView: View {
+    let avds: [AVD]
+    @Binding var hoveredAVD: String?
+    let onStart: (AVD) -> Void
     
-    private func emulatorCard(emu: RunningEmulator) -> some View {
-        HStack(spacing: 12) {
-            // Status Indicator
-            ZStack {
-                Circle()
-                    .fill(Color.green.opacity(0.15))
-                    .frame(width: 32, height: 32)
-                
-                Image(systemName: "play.fill")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.green)
+    var body: some View {
+        SectionContainer(
+            title: "Available",
+            systemImage: "square.stack.3d.up.fill",
+            accentColor: .blue
+        ) {
+            if avds.isEmpty {
+                EmptyStateView(
+                    icon: "tray.fill",
+                    message: "No AVDs configured"
+                )
+            } else {
+                VStack(spacing: 8) {
+                    ForEach(avds) { avd in
+                        AVDCard(
+                            avd: avd,
+                            isHovered: hoveredAVD == avd.name,
+                            onHover: { hovering in
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    hoveredAVD = hovering ? avd.name : nil
+                                }
+                            },
+                            onStart: { onStart(avd) }
+                        )
+                    }
+                }
             }
+        }
+    }
+}
+
+// MARK: - Section Container
+
+private struct SectionContainer<Content: View>: View {
+    let title: String
+    let systemImage: String
+    let accentColor: Color
+    @ViewBuilder let content: Content
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader(
+                title: title,
+                systemImage: systemImage,
+                accentColor: accentColor
+            )
             
-            VStack(alignment: .leading, spacing: 3) {
-                Text(emu.serial)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(.primary)
-                
-                Text(emu.state)
-                    .font(.system(size: 11, weight: .regular))
-                    .foregroundStyle(.secondary)
-            }
+            content
+        }
+    }
+}
+
+private struct SectionHeader: View {
+    let title: String
+    let systemImage: String
+    let accentColor: Color
+    
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: systemImage)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(accentColor)
+            
+            Text(title)
+                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .foregroundStyle(.secondary)
+                .textCase(.uppercase)
+                .tracking(0.5)
+            
+            Spacer()
+        }
+    }
+}
+
+// MARK: - Device Card
+
+private struct DeviceCard: View {
+    let device: RunningDevice
+    let isHovered: Bool
+    let onHover: (Bool) -> Void
+    let onStop: () -> Void
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            DeviceIcon(
+                systemImage: device.isEmulator ? "play.fill" : "iphone",
+                color: device.isEmulator ? .green : .orange
+            )
+            
+            DeviceInfo(device: device)
             
             Spacer()
             
-            Button {
-                Task { await state.stop(running: emu) }
-            } label: {
-                Image(systemName: "stop.fill")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .frame(width: 28, height: 28)
-                    .background(
-                        Circle()
-                            .fill(
-                                hoveredEmulator == emu.serial
-                                    ? Color.red
-                                    : Color.secondary.opacity(0.5)
-                            )
-                    )
-            }
-            .buttonStyle(.plain)
-            .onHover { hovering in
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    hoveredEmulator = hovering ? emu.serial : nil
-                }
+            if device.isEmulator {
+                StopButton(
+                    isHovered: isHovered,
+                    onHover: onHover,
+                    onStop: onStop
+                )
+            } else {
+                DeviceStatusLabel(device: device)
             }
         }
         .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(Color.primary.opacity(0.03))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .strokeBorder(Color.primary.opacity(0.06), lineWidth: 1)
-                )
-        )
+        .background(CardBackground())
     }
+}
+
+private struct DeviceIcon: View {
+    let systemImage: String
+    let color: Color
     
-    // MARK: - AVDs Content
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(color.opacity(0.15))
+                .frame(width: 32, height: 32)
+            
+            Image(systemName: systemImage)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(color)
+        }
+    }
+}
+
+private struct DeviceInfo: View {
+    let device: RunningDevice
     
-    @ViewBuilder
-    private var avdsContent: some View {
-        if state.avds.isEmpty {
-            emptyState(
-                icon: "tray.fill",
-                message: "No AVDs configured"
-            )
-        } else {
-            VStack(spacing: 8) {
-                ForEach(state.avds) { avd in
-                    avdCard(avd: avd)
-                }
-            }
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(device.serial)
+                .font(.system(size: 13, weight: .medium))
+            
+            Text(statusText)
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
         }
     }
     
-    private func avdCard(avd: AVD) -> some View {
+    private var statusText: String {
+        if device.isEmulator {
+            return device.state
+        }
+        
+        if device.isUnauthorized {
+            return "USB debugging not authorized"
+        }
+        if device.isOffline {
+            return "Device offline"
+        }
+        if device.state == "device" {
+            return "Connected (USB debugging enabled)"
+        }
+        return device.state
+    }
+}
+
+private struct StopButton: View {
+    let isHovered: Bool
+    let onHover: (Bool) -> Void
+    let onStop: () -> Void
+    
+    var body: some View {
+        Button(action: onStop) {
+            Image(systemName: "stop.fill")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(.white)
+                .frame(width: 28, height: 28)
+                .background(
+                    Circle().fill(
+                        isHovered ? Color.red : Color.secondary.opacity(0.5)
+                    )
+                )
+        }
+        .buttonStyle(.plain)
+        .onHover(perform: onHover)
+    }
+}
+
+private struct DeviceStatusLabel: View {
+    let device: RunningDevice
+    
+    var body: some View {
+        Text(labelText)
+            .font(.system(size: 11, weight: .medium))
+            .foregroundStyle(device.isUnauthorized ? .orange : .secondary)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(Capsule().fill(Color.secondary.opacity(0.08)))
+    }
+    
+    private var labelText: String {
+        device.isUnauthorized ? "Authorize" : "Connected"
+    }
+}
+
+// MARK: - AVD Card
+
+private struct AVDCard: View {
+    let avd: AVD
+    let isHovered: Bool
+    let onHover: (Bool) -> Void
+    let onStart: () -> Void
+    
+    var body: some View {
         HStack(spacing: 12) {
-            // Device Icon
-            ZStack {
-                Circle()
-                    .fill(Color.blue.opacity(0.1))
-                    .frame(width: 32, height: 32)
-                
-                Image(systemName: "iphone")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(.blue)
-            }
+            DeviceIcon(systemImage: "iphone", color: .blue)
             
             Text(avd.name)
                 .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(.primary)
                 .lineLimit(1)
             
             Spacer()
             
-            Button {
-                Task { await state.start(avd: avd) }
-            } label: {
-                Image(systemName: "play.fill")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .frame(width: 28, height: 28)
-                    .background(
-                        Circle()
-                            .fill(
-                                hoveredAVD == avd.name
-                                    ? LinearGradient(
-                                        colors: [.blue, .blue.opacity(0.8)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                    : LinearGradient(
-                                        colors: [.blue.opacity(0.7), .blue.opacity(0.6)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                            )
-                    )
-                    .shadow(
-                        color: hoveredAVD == avd.name ? .blue.opacity(0.3) : .clear,
-                        radius: 4,
-                        y: 2
-                    )
-            }
-            .buttonStyle(.plain)
-            .onHover { hovering in
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    hoveredAVD = hovering ? avd.name : nil
-                }
-            }
+            StartButton(
+                isHovered: isHovered,
+                onHover: onHover,
+                onStart: onStart
+            )
         }
         .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(Color.primary.opacity(0.03))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .strokeBorder(Color.primary.opacity(0.06), lineWidth: 1)
+        .background(CardBackground())
+    }
+}
+
+private struct StartButton: View {
+    let isHovered: Bool
+    let onHover: (Bool) -> Void
+    let onStart: () -> Void
+    
+    var body: some View {
+        Button(action: onStart) {
+            Image(systemName: "play.fill")
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(.white)
+                .frame(width: 28, height: 28)
+                .background(
+                    Circle().fill(
+                        LinearGradient(
+                            colors: gradientColors,
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
                 )
-        )
+                .shadow(
+                    color: isHovered ? .blue.opacity(0.3) : .clear,
+                    radius: 4,
+                    y: 2
+                )
+        }
+        .buttonStyle(.plain)
+        .onHover(perform: onHover)
     }
     
-    // MARK: - Empty State
+    private var gradientColors: [Color] {
+        isHovered
+            ? [.blue, .blue.opacity(0.8)]
+            : [.blue.opacity(0.7), .blue.opacity(0.6)]
+    }
+}
+
+// MARK: - Empty State
+
+private struct EmptyStateView: View {
+    let icon: String
+    let message: String
     
-    private func emptyState(icon: String, message: String) -> some View {
+    var body: some View {
         HStack(spacing: 10) {
             Image(systemName: icon)
                 .font(.system(size: 16, weight: .medium))
@@ -474,75 +510,111 @@ struct MenuBarRootView: View {
                 .fill(Color.secondary.opacity(0.04))
                 .overlay(
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .strokeBorder(Color.secondary.opacity(0.1), style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
+                        .strokeBorder(
+                            Color.secondary.opacity(0.1),
+                            style: StrokeStyle(lineWidth: 1, dash: [4, 4])
+                        )
                 )
         )
     }
+}
+
+// MARK: - Footer
+
+private struct FooterView: View {
+    let isRefreshing: Bool
+    let onRefresh: () -> Void
     
-    // MARK: - Footer
-    
-    private var footer: some View {
+    var body: some View {
         HStack(spacing: 10) {
-            Button {
-                Task { await state.refreshAll() }
-            } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: state.isRefreshing ? "arrow.circlepath" : "arrow.clockwise")
-                        .font(.system(size: 11, weight: .semibold))
-                        .rotationEffect(.degrees(state.isRefreshing ? 360 : 0))
-                        .animation(
-                            state.isRefreshing
-                                ? Animation.linear(duration: 1).repeatForever(autoreverses: false)
-                                : .default,
-                            value: state.isRefreshing
-                        )
-                    
-                    Text(state.isRefreshing ? "Refreshing" : "Refresh")
-                        .font(.system(size: 12, weight: .medium))
-                }
-                .foregroundStyle(.primary)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 7)
-                .background(
-                    Capsule()
-                        .fill(Color.primary.opacity(0.06))
-                        .overlay(
-                            Capsule()
-                                .strokeBorder(Color.primary.opacity(0.1), lineWidth: 1)
-                        )
-                )
-            }
-            .buttonStyle(.plain)
-            .disabled(state.isRefreshing)
-            .opacity(state.isRefreshing ? 0.6 : 1)
+            RefreshButton(
+                isRefreshing: isRefreshing,
+                onRefresh: onRefresh
+            )
             
             Spacer()
             
-            Button {
-                NSApplication.shared.terminate(nil)
-            } label: {
-                HStack(spacing: 6) {
-                    Text("Quit")
-                        .font(.system(size: 12, weight: .medium))
-                    
-                    Image(systemName: "xmark")
-                        .font(.system(size: 10, weight: .semibold))
-                }
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 7)
-                .background(
-                    Capsule()
-                        .fill(Color.secondary.opacity(0.08))
-                )
-            }
-            .buttonStyle(.plain)
+            QuitButton()
         }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 12)
     }
+}
+
+private struct RefreshButton: View {
+    let isRefreshing: Bool
+    let onRefresh: () -> Void
     
-    // MARK: - Background
-    
-    private var backgroundGradient: some View {
+    var body: some View {
+        Button(action: onRefresh) {
+            HStack(spacing: 6) {
+                Image(systemName: isRefreshing ? "arrow.circlepath" : "arrow.clockwise")
+                    .font(.system(size: 11, weight: .semibold))
+                    .rotationEffect(.degrees(isRefreshing ? 360 : 0))
+                    .animation(
+                        isRefreshing
+                            ? Animation.linear(duration: 1).repeatForever(autoreverses: false)
+                            : .default,
+                        value: isRefreshing
+                    )
+                
+                Text(isRefreshing ? "Refreshing" : "Refresh")
+                    .font(.system(size: 12, weight: .medium))
+            }
+            .foregroundStyle(.primary)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 7)
+            .background(
+                Capsule()
+                    .fill(Color.primary.opacity(0.06))
+                    .overlay(
+                        Capsule()
+                            .strokeBorder(Color.primary.opacity(0.1), lineWidth: 1)
+                    )
+            )
+        }
+        .buttonStyle(.plain)
+        .disabled(isRefreshing)
+        .opacity(isRefreshing ? 0.6 : 1)
+    }
+}
+
+private struct QuitButton: View {
+    var body: some View {
+        Button {
+            NSApplication.shared.terminate(nil)
+        } label: {
+            HStack(spacing: 6) {
+                Text("Quit")
+                    .font(.system(size: 12, weight: .medium))
+                
+                Image(systemName: "xmark")
+                    .font(.system(size: 10, weight: .semibold))
+            }
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 7)
+            .background(Capsule().fill(Color.secondary.opacity(0.08)))
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Reusable Components
+
+private struct CardBackground: View {
+    var body: some View {
+        RoundedRectangle(cornerRadius: 10, style: .continuous)
+            .fill(Color.primary.opacity(0.03))
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .strokeBorder(Color.primary.opacity(0.06), lineWidth: 1)
+            )
+    }
+}
+
+private struct AppBackground: View {
+    var body: some View {
         LinearGradient(
             colors: [
                 Color(NSColor.windowBackgroundColor),
