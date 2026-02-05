@@ -19,6 +19,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.1.3] - 2026-02-05
+### Added
+- Added an **About** section in Settings with:
+  - App identity text
+  - Runtime version/build display
+  - Quick links to repository, changelog, and license
+
+### Changed
+- Updated menu header branding to **EmuHub**.
+- Added compact header counts for emulator and physical device totals.
+- Updated Running section empty-state message to **"No connected devices"** for clearer wording.
+- Added footer refresh recency text (`Updated ...`) backed by tracked refresh timestamps.
+
+### Fixed
+- Improved physical-device status pill labeling to correctly show **Authorize**, **Offline**, or **Connected** instead of overly generic state wording.
+
 ## [1.1.2] - 2026-02-05
 ### Added
 - Automated macOS CI build using GitHub Actions

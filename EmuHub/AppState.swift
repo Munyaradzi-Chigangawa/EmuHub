@@ -15,6 +15,7 @@ final class AppState: ObservableObject {
     @Published var running: [RunningDevice] = []
     @Published var isRefreshing = false
     @Published var lastError: String?
+    @Published var lastRefreshAt: Date?
 
     @AppStorage("sdkPath") var sdkPath: String =  "" // e.g. /Users/you/Library/Android/sdk
     @AppStorage("emulatorExtraArgs") var emulatorExtraArgs: String = "-no-snapshot-load"
@@ -44,7 +45,10 @@ final class AppState: ObservableObject {
     func refreshAll() async {
         ensureSdkPath()
         isRefreshing = true
-        defer { isRefreshing = false }
+        defer {
+            isRefreshing = false
+            lastRefreshAt = Date()
+        }
 
         do {
             let toolchain = try AndroidToolchain(sdkPath: sdkPath)
