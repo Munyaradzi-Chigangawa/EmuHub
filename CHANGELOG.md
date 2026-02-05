@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 ### Planned
 - Developer ID signing and macOS notarization
-- Homebrew cask installation
+- Homebrew cask installation 
 - Advanced emulator controls (cold boot, wipe data)
 - Automatic update mechanism
 - Grouped display of emulators and physical devices
