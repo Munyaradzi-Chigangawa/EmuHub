@@ -47,6 +47,11 @@
 			path = EmuHubUITests;
 			sourceTree = "<group>";
 		};
+		8599996D2F34B37D005E5A14 /* .github */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = .github;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -77,6 +82,7 @@
 		856B5AAC2F289D2900BBA8A7 = {
 			isa = PBXGroup;
 			children = (
+				8599996D2F34B37D005E5A14 /* .github */,
 				856B5AB72F289D2900BBA8A7 /* EmuHub */,
 				856B5AC72F289D2B00BBA8A7 /* EmuHubTests */,
 				856B5AD12F289D2B00BBA8A7 /* EmuHubUITests */,
@@ -420,7 +426,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = zw.co.munyaradzichigangawa.EmuHub;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -467,7 +473,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = zw.co.munyaradzichigangawa.EmuHub;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
