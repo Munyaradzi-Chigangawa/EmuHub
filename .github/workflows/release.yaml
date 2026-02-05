@@ -1,3 +1,46 @@
+# name: Release (macOS)
+#
+# on:
+#   push:
+#     tags:
+#       - "v*.*.*"   # e.g. v1.0.0
+#
+# permissions:
+#   contents: write
+#
+# jobs:
+#   release:
+#     runs-on: macos-latest
+#
+#     steps:
+#       - uses: actions/checkout@v4
+#
+#       - name: Build (Release)
+#         run: |
+#           xcodebuild \
+#             -project EmuHub.xcodeproj \
+#             -scheme EmuHub \
+#             -configuration Release \
+#             -derivedDataPath build \
+#             clean build
+#
+#       - name: Package .app
+#         run: |
+#           APP_PATH="build/Build/Products/Release/EmuHub.app"
+#           ZIP_NAME="EmuHub-${GITHUB_REF_NAME}.zip"
+#           ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$ZIP_NAME"
+#           echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
+#
+#       - name: Create GitHub Release and upload asset
+#         env:
+#           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#         run: |
+#           gh release create "$GITHUB_REF_NAME" \
+#             --title "EmuHub $GITHUB_REF_NAME" \
+#             --generate-notes \
+#             "$ZIP_NAME"
+
+
 name: Release (macOS)
 
 on:
@@ -15,14 +58,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build (Release)
+      - name: Build (Release, no signing)
         run: |
           xcodebuild \
             -project EmuHub.xcodeproj \
             -scheme EmuHub \
             -configuration Release \
+            -destination "platform=macOS" \
             -derivedDataPath build \
-            clean build
+            clean build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""
 
       - name: Package .app
         run: |
@@ -30,6 +77,7 @@ jobs:
           ZIP_NAME="EmuHub-${GITHUB_REF_NAME}.zip"
           ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$ZIP_NAME"
           echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
+          ls -la "$ZIP_NAME"
 
       - name: Create GitHub Release and upload asset
         env:
@@ -37,6 +85,7 @@ jobs:
         run: |
           gh release create "$GITHUB_REF_NAME" \
             --title "EmuHub $GITHUB_REF_NAME" \
+            --notes "See CHANGELOG.md for full details." \
             --generate-notes \
             "$ZIP_NAME"
 
