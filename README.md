@@ -116,7 +116,7 @@ This design prevents accidental or unsafe actions on real hardware.
 ### Run Locally
 
 ```bash
-git clone https://github.com/<your-username>/emuhub.git
-cd emuhub
+git clone https://github.com/Munyaradzi-Chigangawa/EmuHub.git
+cd EmuHub
 open EmuHub.xcodeproj
 ```
