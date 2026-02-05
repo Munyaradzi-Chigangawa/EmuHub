@@ -9,4 +9,7 @@ struct RunningEmulator: Identifiable, Hashable {
     var id: String { serial }
     let serial: String
     let state: String
+    
+    var isEmulator: Bool { serial.hasPrefix("emulator-") }
+    var isUnauthorized: Bool { state == "unauthorized" }
 }

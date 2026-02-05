@@ -12,7 +12,7 @@ import Combine
 @MainActor
 final class AppState: ObservableObject {
     @Published var avds: [AVD] = []
-    @Published var running: [RunningEmulator] = []
+    @Published var running: [RunningDevice] = []
     @Published var isRefreshing = false
     @Published var lastError: String?
 
@@ -81,12 +81,16 @@ final class AppState: ObservableObject {
             lastError = error.localizedDescription
         }
     }
+    
+    func stop(device: RunningDevice) async {
+        guard device.isEmulator else {
+            lastError = "This is a physical device. To remove it from the list, unplug USB or disable USB debugging."
+            return
+        }
 
-    func stop(running: RunningEmulator) async {
         do {
-            ensureSdkPath()
             let toolchain = try AndroidToolchain(sdkPath: sdkPath)
-            try await adbService.stopEmulator(adbPath: toolchain.adbPath, serial: running.serial)
+            try await adbService.stopEmulator(adbPath: toolchain.adbPath, serial: device.serial)
             await refreshAll()
         } catch {
             lastError = error.localizedDescription

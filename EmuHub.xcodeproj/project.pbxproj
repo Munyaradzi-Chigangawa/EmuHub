@@ -6,10 +6,6 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXBuildFile section */
-		859999402F2B6AC3005E5A14 /* CHANGELOG.md in Resources */ = {isa = PBXBuildFile; fileRef = 8599993F2F2B6AB5005E5A14 /* CHANGELOG.md */; };
-/* End PBXBuildFile section */
-
 /* Begin PBXContainerItemProxy section */
 		856B5AC52F289D2B00BBA8A7 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -32,6 +28,7 @@
 		856B5AC42F289D2B00BBA8A7 /* EmuHubTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EmuHubTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		856B5ACE2F289D2B00BBA8A7 /* EmuHubUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EmuHubUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8599993F2F2B6AB5005E5A14 /* CHANGELOG.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CHANGELOG.md; sourceTree = "<group>"; };
+		859999412F2B6CE3005E5A14 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -80,11 +77,12 @@
 		856B5AAC2F289D2900BBA8A7 = {
 			isa = PBXGroup;
 			children = (
-				8599993F2F2B6AB5005E5A14 /* CHANGELOG.md */,
 				856B5AB72F289D2900BBA8A7 /* EmuHub */,
 				856B5AC72F289D2B00BBA8A7 /* EmuHubTests */,
 				856B5AD12F289D2B00BBA8A7 /* EmuHubUITests */,
 				856B5AB62F289D2900BBA8A7 /* Products */,
+				859999412F2B6CE3005E5A14 /* README.md */,
+				8599993F2F2B6AB5005E5A14 /* CHANGELOG.md */,
 			);
 			sourceTree = "<group>";
 		};
@@ -218,7 +216,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				859999402F2B6AC3005E5A14 /* CHANGELOG.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
