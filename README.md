@@ -120,3 +120,8 @@ git clone https://github.com/Munyaradzi-Chigangawa/EmuHub.git
 cd EmuHub
 open EmuHub.xcodeproj
 ```
+
+---
+
+## License
+MIT © Munyaradzi Chigangawa
