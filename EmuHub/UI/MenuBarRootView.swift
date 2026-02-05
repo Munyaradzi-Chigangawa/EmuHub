@@ -60,7 +60,6 @@ struct MenuBarRootView: View {
             
             FooterView(
                 isRefreshing: state.isRefreshing,
-                lastRefreshAt: state.lastRefreshAt,
                 onRefresh: {
                     Task { await state.refreshAll() }
                 }
@@ -538,7 +537,6 @@ private struct EmptyStateView: View {
 
 private struct FooterView: View {
     let isRefreshing: Bool
-    let lastRefreshAt: Date?
     let onRefresh: () -> Void
     
     var body: some View {
@@ -547,13 +545,6 @@ private struct FooterView: View {
                 isRefreshing: isRefreshing,
                 onRefresh: onRefresh
             )
-
-            if let lastRefreshAt {
-                Text("Updated \(lastRefreshAt, style: .relative)")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
             
             Spacer()
             
