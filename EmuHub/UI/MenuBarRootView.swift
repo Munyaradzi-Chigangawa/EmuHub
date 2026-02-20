@@ -9,6 +9,7 @@ import SwiftUI
 
 struct MenuBarRootView: View {
     @EnvironmentObject var state: AppState
+    @Environment(\.openSettings) private var openSettings
     @State private var hoveredEmulator: String?
     @State private var hoveredAVD: String?
     
@@ -17,7 +18,10 @@ struct MenuBarRootView: View {
             HeaderView(
                 runningCount: state.running.count,
                 emulatorCount: state.running.filter(\.isEmulator).count,
-                physicalCount: state.running.filter { !$0.isEmulator }.count
+                physicalCount: state.running.filter { !$0.isEmulator }.count,
+                onOpenSettings: {
+                    openSettings()
+                }
             )
             
             Divider().opacity(0.1)
@@ -83,6 +87,7 @@ private struct HeaderView: View {
     let runningCount: Int
     let emulatorCount: Int
     let physicalCount: Int
+    let onOpenSettings: () -> Void
     
     var body: some View {
         HStack(spacing: 12) {
@@ -99,12 +104,24 @@ private struct HeaderView: View {
             
             Spacer()
 
-            VStack(alignment: .trailing, spacing: 2) {
-                StatusBadge(count: runningCount)
+            HStack(spacing: 8) {
+                VStack(alignment: .trailing, spacing: 2) {
+                    StatusBadge(count: runningCount)
 
-                Text("\(emulatorCount) emu • \(physicalCount) phone")
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(.secondary)
+                    Text("\(emulatorCount) emu • \(physicalCount) phone")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
+
+                Button(action: onOpenSettings) {
+                    Image(systemName: "gearshape")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 24, height: 24)
+                        .background(Circle().fill(Color.secondary.opacity(0.08)))
+                }
+                .buttonStyle(.plain)
+                .help("Settings")
             }
         }
         .padding(.horizontal, 20)
@@ -546,33 +563,12 @@ private struct FooterView: View {
                 onRefresh: onRefresh
             )
 
-            SettingsButton()
-            
             Spacer()
             
             QuitButton()
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
-    }
-}
-
-private struct SettingsButton: View {
-    var body: some View {
-        SettingsLink {
-            HStack(spacing: 6) {
-                Image(systemName: "gearshape")
-                    .font(.system(size: 11, weight: .semibold))
-
-                Text("Settings")
-                    .font(.system(size: 12, weight: .medium))
-            }
-            .foregroundStyle(.secondary)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 7)
-            .background(Capsule().fill(Color.secondary.opacity(0.08)))
-        }
-        .buttonStyle(.plain)
     }
 }
 
