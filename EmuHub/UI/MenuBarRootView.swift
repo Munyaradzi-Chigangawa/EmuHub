@@ -694,14 +694,17 @@ private struct QuickActionsOverlay: View {
 
                 Group {
                     if let selectedDestination {
-                        QuickActionDetailView(destination: selectedDestination)
-                            .environmentObject(state)
+                        QuickActionDetailView(
+                            destination: selectedDestination,
+                            onBack: { self.selectedDestination = nil }
+                        )
+                        .environmentObject(state)
                     } else {
                         QuickActionsMenuView(selectedDestination: $selectedDestination)
                     }
                 }
             }
-            .frame(width: 360, height: 500)
+            .frame(width: 372, height: 560)
             .background(
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .fill(Color(NSColor.windowBackgroundColor))
@@ -800,10 +803,19 @@ private struct QuickActionsMenuView: View {
 private struct QuickActionDetailView: View {
     @EnvironmentObject var state: AppState
     let destination: QuickActionDestination
+    let onBack: () -> Void
     @Environment(\.openURL) private var openURL
 
     var body: some View {
-        Group {
+        VStack(spacing: 0) {
+            QuickActionPageHeader(
+                title: destination.title,
+                onBack: onBack
+            )
+
+            Divider()
+
+            Group {
             switch destination {
             case .checkForUpdates:
                 QuickActionInfoPage(
@@ -817,6 +829,7 @@ private struct QuickActionDetailView: View {
             case .settings:
                 SettingsView(preferredWidth: nil)
                     .environmentObject(state)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             case .help:
                 QuickActionInfoPage(
                     title: "Help",
@@ -833,6 +846,38 @@ private struct QuickActionDetailView: View {
     }
 }
 
+private struct QuickActionPageHeader: View {
+    let title: String
+    let onBack: () -> Void
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Button(action: onBack) {
+                HStack(spacing: 4) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 11, weight: .semibold))
+                    Text("Back")
+                        .font(.system(size: 12, weight: .semibold))
+                }
+                .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+
+            Spacer()
+
+            Text(title)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(.secondary)
+
+            Spacer()
+
+            Color.clear.frame(width: 40, height: 1)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+    }
+}
+
 private struct QuickActionInfoPage: View {
     let title: String
     let description: String
@@ -840,7 +885,8 @@ private struct QuickActionInfoPage: View {
     let primaryAction: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
             Text(title)
                 .font(.title3.weight(.semibold))
 
@@ -853,7 +899,9 @@ private struct QuickActionInfoPage: View {
 
             Spacer()
         }
-        .padding(20)
+            .padding(20)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
     }
 }
 
@@ -865,7 +913,8 @@ private struct QuickActionAboutPage: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 10) {
             Text("EmuHub")
                 .font(.title3.weight(.semibold))
 
@@ -878,7 +927,9 @@ private struct QuickActionAboutPage: View {
 
             Spacer()
         }
-        .padding(20)
+            .padding(20)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
     }
 }
 
