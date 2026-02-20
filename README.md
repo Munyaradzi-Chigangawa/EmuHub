@@ -39,7 +39,9 @@ It allows you to start, monitor, and stop Android emulators directly from the ma
 3. Drag **EmuHub.app** into the **Applications** folder
 4. First launch: open Terminal and run:
 
+``` bash
 sudo xattr -dr com.apple.quarantine /Applications/EmuHub.app
+```
 
 Then launch **EmuHub** normally.
 
