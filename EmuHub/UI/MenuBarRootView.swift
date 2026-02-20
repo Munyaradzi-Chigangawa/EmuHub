@@ -9,9 +9,9 @@ import SwiftUI
 
 struct MenuBarRootView: View {
     @EnvironmentObject var state: AppState
-    @Environment(\.openSettings) private var openSettings
     @State private var hoveredEmulator: String?
     @State private var hoveredAVD: String?
+    @State private var isShowingSettings = false
     
     var body: some View {
         VStack(spacing: 0) {
@@ -20,7 +20,7 @@ struct MenuBarRootView: View {
                 emulatorCount: state.running.filter(\.isEmulator).count,
                 physicalCount: state.running.filter { !$0.isEmulator }.count,
                 onOpenSettings: {
-                    openSettings()
+                    isShowingSettings = true
                 }
             )
             
@@ -77,6 +77,10 @@ struct MenuBarRootView: View {
         }
         .onDisappear {
             state.stopAutoRefresh()
+        }
+        .sheet(isPresented: $isShowingSettings) {
+            SettingsView()
+                .environmentObject(state)
         }
     }
 }
