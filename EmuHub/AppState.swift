@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import Combine
+import ServiceManagement
 
 @MainActor
 final class AppState: ObservableObject {
@@ -16,6 +17,11 @@ final class AppState: ObservableObject {
     @Published var isRefreshing = false
     @Published var lastError: String?
     @Published var lastRefreshAt: Date?
+    @Published var launchAtLoginEnabled = false
+    @Published var launchAtLoginError: String?
+    @Published var isCheckingForUpdates = false
+    @Published var updateCheckResult: UpdateCheckResult?
+    @Published var updateError: String?
 
     @AppStorage("sdkPath") var sdkPath: String =  "" // e.g. /Users/you/Library/Android/sdk
     @AppStorage("emulatorExtraArgs") var emulatorExtraArgs: String = "-no-snapshot-load"
@@ -23,8 +29,13 @@ final class AppState: ObservableObject {
 
     let emulatorService = EmulatorService()
     let adbService = AdbService()
+    let releaseUpdateService = ReleaseUpdateService()
 
     private var refreshTask: Task<Void, Never>?
+
+    init() {
+        refreshLaunchAtLoginState()
+    }
 
     func startAutoRefresh() {
         refreshTask?.cancel()
@@ -85,7 +96,7 @@ final class AppState: ObservableObject {
             lastError = error.localizedDescription
         }
     }
-    
+
     func stop(device: RunningDevice) async {
         guard device.isEmulator else {
             lastError = "This is a physical device. To remove it from the list, unplug USB or disable USB debugging."
@@ -100,7 +111,40 @@ final class AppState: ObservableObject {
             lastError = error.localizedDescription
         }
     }
-    
+
+    func refreshLaunchAtLoginState() {
+        guard #available(macOS 13.0, *) else {
+            launchAtLoginEnabled = false
+            launchAtLoginError = "Launch at Login requires macOS 13 or newer."
+            return
+        }
+
+        launchAtLoginEnabled = SMAppService.mainApp.status == .enabled
+        launchAtLoginError = nil
+    }
+
+    func setLaunchAtLogin(_ enabled: Bool) {
+        guard #available(macOS 13.0, *) else {
+            launchAtLoginEnabled = false
+            launchAtLoginError = "Launch at Login requires macOS 13 or newer."
+            return
+        }
+
+        do {
+            if enabled {
+                try SMAppService.mainApp.register()
+            } else {
+                try SMAppService.mainApp.unregister()
+            }
+
+            launchAtLoginEnabled = SMAppService.mainApp.status == .enabled
+            launchAtLoginError = nil
+        } catch {
+            launchAtLoginEnabled = SMAppService.mainApp.status == .enabled
+            launchAtLoginError = "Could not update Launch at Login: \(error.localizedDescription)"
+        }
+    }
+
     private func ensureSdkPath() {
         let fm = FileManager.default
 
@@ -110,6 +154,21 @@ final class AppState: ObservableObject {
             if fm.fileExists(atPath: auto) {
                 sdkPath = auto
             }
+        }
+    }
+
+    func checkForUpdates() async {
+        let currentVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
+
+        isCheckingForUpdates = true
+        updateError = nil
+        defer { isCheckingForUpdates = false }
+
+        do {
+            updateCheckResult = try await releaseUpdateService.checkForUpdates(currentVersion: currentVersion)
+        } catch {
+            updateCheckResult = nil
+            updateError = error.localizedDescription
         }
     }
 }
