@@ -12,6 +12,7 @@ struct MenuBarRootView: View {
     @State private var hoveredEmulator: String?
     @State private var hoveredAVD: String?
     @State private var isShowingQuickActions = false
+    @State private var selectedQuickAction: QuickActionDestination?
     
     var body: some View {
         VStack(spacing: 0) {
@@ -20,6 +21,7 @@ struct MenuBarRootView: View {
                 emulatorCount: state.running.filter(\.isEmulator).count,
                 physicalCount: state.running.filter { !$0.isEmulator }.count,
                 onOpenQuickActions: {
+                    selectedQuickAction = nil
                     isShowingQuickActions = true
                 }
             )
@@ -78,9 +80,14 @@ struct MenuBarRootView: View {
         .onDisappear {
             state.stopAutoRefresh()
         }
-        .sheet(isPresented: $isShowingQuickActions) {
-            QuickActionsSheet()
+        .overlay {
+            if isShowingQuickActions {
+                QuickActionsOverlay(
+                    selectedDestination: $selectedQuickAction,
+                    isPresented: $isShowingQuickActions
+                )
                 .environmentObject(state)
+            }
         }
     }
 }
@@ -662,53 +669,112 @@ private enum QuickActionDestination: String, CaseIterable, Identifiable, Hashabl
         case .about: return "info.circle"
         }
     }
+}
 
-    var tint: Color {
-        switch self {
-        case .checkForUpdates: return .blue
-        case .settings: return .purple
-        case .help: return .orange
-        case .about: return .green
+private struct QuickActionsOverlay: View {
+    @EnvironmentObject var state: AppState
+    @Binding var selectedDestination: QuickActionDestination?
+    @Binding var isPresented: Bool
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.2)
+                .ignoresSafeArea()
+                .onTapGesture { isPresented = false }
+
+            VStack(spacing: 0) {
+                QuickActionsHeader(
+                    title: selectedDestination?.title ?? "EmuHub",
+                    canGoBack: selectedDestination != nil,
+                    onBack: { selectedDestination = nil },
+                    onClose: { isPresented = false }
+                )
+
+                Divider()
+
+                Group {
+                    if let selectedDestination {
+                        QuickActionDetailView(destination: selectedDestination)
+                            .environmentObject(state)
+                    } else {
+                        QuickActionsMenuView(selectedDestination: $selectedDestination)
+                    }
+                }
+            }
+            .frame(width: 360, height: 500)
+            .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(Color(NSColor.windowBackgroundColor))
+                    .shadow(color: .black.opacity(0.2), radius: 16, y: 8)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
+            )
+            .padding(12)
         }
+        .transition(.opacity)
+        .animation(.easeInOut(duration: 0.16), value: isPresented)
     }
 }
 
-private struct QuickActionsSheet: View {
-    @EnvironmentObject var state: AppState
-    @Environment(\.dismiss) private var dismiss
-    @State private var navigationPath: [QuickActionDestination] = []
+private struct QuickActionsHeader: View {
+    let title: String
+    let canGoBack: Bool
+    let onBack: () -> Void
+    let onClose: () -> Void
 
     var body: some View {
-        NavigationStack(path: $navigationPath) {
-            QuickActionsMenuView(path: $navigationPath, dismiss: dismiss)
-                .navigationDestination(for: QuickActionDestination.self) { destination in
-                    QuickActionDetailView(destination: destination)
-                        .environmentObject(state)
+        HStack {
+            if canGoBack {
+                Button(action: onBack) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 11, weight: .semibold))
+                        .frame(width: 22, height: 22)
                 }
+                .buttonStyle(.plain)
+            } else {
+                Color.clear.frame(width: 22, height: 22)
+            }
+
+            Spacer()
+
+            Text(title)
+                .font(.system(size: 13, weight: .semibold))
+
+            Spacer()
+
+            Button(action: onClose) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 11, weight: .semibold))
+                    .frame(width: 22, height: 22)
+            }
+            .buttonStyle(.plain)
         }
-        .frame(minWidth: 460, minHeight: 440)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
     }
 }
 
 private struct QuickActionsMenuView: View {
-    @Binding var path: [QuickActionDestination]
-    let dismiss: DismissAction
+    @Binding var selectedDestination: QuickActionDestination?
 
     var body: some View {
-        List {
-            Section("App") {
+        ScrollView {
+            VStack(spacing: 8) {
                 ForEach(QuickActionDestination.allCases) { item in
                     Button {
-                        path.append(item)
+                        selectedDestination = item
                     } label: {
-                        HStack(spacing: 12) {
+                        HStack(spacing: 10) {
                             Image(systemName: item.icon)
                                 .font(.system(size: 13, weight: .semibold))
-                                .foregroundStyle(item.tint)
                                 .frame(width: 20)
+                                .foregroundStyle(.secondary)
 
                             Text(item.title)
                                 .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(.primary)
 
                             Spacer()
 
@@ -716,18 +782,17 @@ private struct QuickActionsMenuView: View {
                                 .font(.system(size: 10, weight: .semibold))
                                 .foregroundStyle(.tertiary)
                         }
-                        .padding(.vertical, 4)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .fill(Color.primary.opacity(0.04))
+                        )
                     }
                     .buttonStyle(.plain)
                 }
             }
-        }
-        .listStyle(.inset)
-        .navigationTitle("EmuHub")
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Close") { dismiss() }
-            }
+            .padding(12)
         }
     }
 }
@@ -750,7 +815,7 @@ private struct QuickActionDetailView: View {
                     }
                 )
             case .settings:
-                SettingsView()
+                SettingsView(preferredWidth: nil)
                     .environmentObject(state)
             case .help:
                 QuickActionInfoPage(
@@ -765,7 +830,6 @@ private struct QuickActionDetailView: View {
                 QuickActionAboutPage()
             }
         }
-        .navigationTitle(destination.title)
     }
 }
 

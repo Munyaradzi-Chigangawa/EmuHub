@@ -9,6 +9,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @EnvironmentObject var state: AppState
+    var preferredWidth: CGFloat? = 520
 
     var body: some View {
         Form {
@@ -75,7 +76,7 @@ struct SettingsView: View {
             }
         }
         .padding()
-        .frame(width: 520)
+        .frame(width: preferredWidth)
         .onAppear {
             state.refreshLaunchAtLoginState()
         }
