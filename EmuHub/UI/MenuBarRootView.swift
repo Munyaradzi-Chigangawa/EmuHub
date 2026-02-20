@@ -11,13 +11,18 @@ struct MenuBarRootView: View {
     @EnvironmentObject var state: AppState
     @State private var hoveredEmulator: String?
     @State private var hoveredAVD: String?
+    @State private var isShowingQuickMenu = false
+    @State private var activeQuickAction: QuickActionDestination?
     
     var body: some View {
         VStack(spacing: 0) {
             HeaderView(
                 runningCount: state.running.count,
                 emulatorCount: state.running.filter(\.isEmulator).count,
-                physicalCount: state.running.filter { !$0.isEmulator }.count
+                physicalCount: state.running.filter { !$0.isEmulator }.count,
+                onOpenQuickActions: {
+                    isShowingQuickMenu.toggle()
+                }
             )
             
             Divider().opacity(0.1)
@@ -65,7 +70,7 @@ struct MenuBarRootView: View {
                 }
             )
         }
-        .frame(width: 380)
+        .frame(width: 420, height: 620)
         .background(AppBackground())
         .task {
             await state.refreshAll()
@@ -73,6 +78,25 @@ struct MenuBarRootView: View {
         }
         .onDisappear {
             state.stopAutoRefresh()
+        }
+        .overlay(alignment: .topTrailing) {
+            if isShowingQuickMenu {
+                QuickActionsDropdown { destination in
+                    isShowingQuickMenu = false
+                    activeQuickAction = destination
+                }
+                .padding(.top, 52)
+                .padding(.trailing, 12)
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .overlay {
+            if let destination = activeQuickAction {
+                QuickActionPanel(destination: destination) {
+                    activeQuickAction = nil
+                }
+                .environmentObject(state)
+            }
         }
     }
 }
@@ -83,6 +107,7 @@ private struct HeaderView: View {
     let runningCount: Int
     let emulatorCount: Int
     let physicalCount: Int
+    let onOpenQuickActions: () -> Void
     
     var body: some View {
         HStack(spacing: 12) {
@@ -99,12 +124,24 @@ private struct HeaderView: View {
             
             Spacer()
 
-            VStack(alignment: .trailing, spacing: 2) {
-                StatusBadge(count: runningCount)
+            HStack(spacing: 8) {
+                VStack(alignment: .trailing, spacing: 2) {
+                    StatusBadge(count: runningCount)
 
-                Text("\(emulatorCount) emu • \(physicalCount) phone")
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(.secondary)
+                    Text("\(emulatorCount) emu • \(physicalCount) phone")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
+
+                Button(action: onOpenQuickActions) {
+                    Image(systemName: "gearshape")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 24, height: 24)
+                        .background(Circle().fill(Color.secondary.opacity(0.08)))
+                }
+                .buttonStyle(.plain)
+                .help("Settings")
             }
         }
         .padding(.horizontal, 20)
@@ -126,7 +163,7 @@ private struct AppIconView: View {
                 )
                 .frame(width: 36, height: 36)
             
-            Image(systemName: "cpu")
+            Image(systemName: "iphone.and.arrow.forward")
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(
                     LinearGradient(
@@ -545,7 +582,7 @@ private struct FooterView: View {
                 isRefreshing: isRefreshing,
                 onRefresh: onRefresh
             )
-            
+
             Spacer()
             
             QuitButton()
@@ -613,6 +650,220 @@ private struct QuitButton: View {
         .buttonStyle(.plain)
     }
 }
+
+
+
+private enum QuickActionDestination: String, CaseIterable, Identifiable, Hashable {
+    case checkForUpdates
+    case settings
+    case help
+    case about
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .checkForUpdates: return "Check for Updates"
+        case .settings: return "Settings"
+        case .help: return "Help"
+        case .about: return "About"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .checkForUpdates: return "arrow.triangle.2.circlepath.circle"
+        case .settings: return "gearshape"
+        case .help: return "questionmark.circle"
+        case .about: return "info.circle"
+        }
+    }
+}
+
+private struct QuickActionsDropdown: View {
+    let onSelect: (QuickActionDestination) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(QuickActionDestination.allCases) { item in
+                Button {
+                    onSelect(item)
+                } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: item.icon)
+                            .font(.system(size: 12, weight: .semibold))
+                            .frame(width: 16)
+                            .foregroundStyle(.secondary)
+
+                        Text(item.title)
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(.primary)
+
+                        Spacer()
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 9)
+                }
+                .buttonStyle(.plain)
+
+                if item != QuickActionDestination.allCases.last {
+                    Divider().opacity(0.25)
+                }
+            }
+        }
+        .frame(width: 230)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color(NSColor.windowBackgroundColor))
+                .shadow(color: .black.opacity(0.25), radius: 14, y: 8)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .strokeBorder(Color.primary.opacity(0.1), lineWidth: 1)
+        )
+    }
+}
+
+private struct QuickActionPanel: View {
+    @EnvironmentObject var state: AppState
+    let destination: QuickActionDestination
+    let onBack: () -> Void
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.28)
+                .ignoresSafeArea()
+                .onTapGesture(perform: onBack)
+
+            VStack(spacing: 0) {
+                HStack(spacing: 10) {
+                    Button(action: onBack) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 11, weight: .semibold))
+                            Text("Back")
+                                .font(.system(size: 12, weight: .semibold))
+                        }
+                        .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+
+                    Spacer()
+
+                    Text(destination.title)
+                        .font(.system(size: 13, weight: .semibold))
+
+                    Spacer()
+
+                    Color.clear.frame(width: 42, height: 1)
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+
+                Divider()
+
+                QuickActionDetailPage(destination: destination)
+                    .environmentObject(state)
+            }
+            .frame(width: 390, height: 560)
+            .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(Color(NSColor.windowBackgroundColor))
+                    .shadow(color: .black.opacity(0.25), radius: 18, y: 10)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .strokeBorder(Color.primary.opacity(0.1), lineWidth: 1)
+            )
+            .padding(14)
+        }
+    }
+}
+
+private struct QuickActionDetailPage: View {
+    @EnvironmentObject var state: AppState
+    let destination: QuickActionDestination
+    @Environment(\.openURL) private var openURL
+
+    var body: some View {
+        switch destination {
+        case .checkForUpdates:
+            QuickActionInfoPage(
+                title: "Check for Updates",
+                description: "Keep EmuHub up to date with the latest improvements and fixes.",
+                primaryButtonTitle: "Open Releases",
+                primaryAction: {
+                    openURL(URL(string: "https://github.com/Munyaradzi-Chigangawa/EmuHub/releases")!)
+                }
+            )
+        case .settings:
+            ScrollView {
+                SettingsView(preferredWidth: nil)
+                    .environmentObject(state)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        case .help:
+            HelpView()
+        case .about:
+            AboutPage()
+        }
+    }
+}
+
+private struct QuickActionInfoPage: View {
+    let title: String
+    let description: String
+    let primaryButtonTitle: String
+    let primaryAction: () -> Void
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                Text(title)
+                    .font(.title3.weight(.semibold))
+
+                Text(description)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+
+                Button(primaryButtonTitle, action: primaryAction)
+                    .buttonStyle(.borderedProminent)
+
+                Spacer(minLength: 0)
+            }
+            .padding(20)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+}
+
+//private struct QuickActionAboutPage: View {
+//    private var appVersion: String {
+//        let short = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "-"
+//        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "-"
+//        return "\(short) (\(build))"
+//    }
+//
+//    var body: some View {
+//        ScrollView {
+//            VStack(alignment: .leading, spacing: 10) {
+//                Text("EmuHub")
+//                    .font(.title3.weight(.semibold))
+//
+//                Text("Android emulator and device manager for macOS menu bar.")
+//                    .foregroundStyle(.secondary)
+//
+//                Text("Version \(appVersion)")
+//                    .font(.callout)
+//                    .foregroundStyle(.secondary)
+//
+//                Spacer(minLength: 0)
+//            }
+//            .padding(20)
+//            .frame(maxWidth: .infinity, alignment: .leading)
+//        }
+//    }
+//}
 
 // MARK: - Reusable Components
 
