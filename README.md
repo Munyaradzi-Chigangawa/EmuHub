@@ -35,13 +35,16 @@ It allows you to start, monitor, and stop Android emulators directly from the ma
 ### macOS (Manual Install)
 
 1. Download the latest release from **GitHub Releases**
-2. Unzip `EmuHub-macOS.zip`
+2. Unzip the downloaded file
 3. Drag **EmuHub.app** into the **Applications** folder
-4. First launch:
-   - Right-click **EmuHub.app** → **Open** → **Open**
-   - Or go to **System Settings → Privacy & Security → Open Anyway**
+4. First launch: open Terminal and run:
 
-> **Note:** The app is currently signed with an Apple Personal Team and is **not notarized**.  
+sudo xattr -dr com.apple.quarantine /Applications/EmuHub.app
+
+Then launch **EmuHub** normally.
+
+> ⚠️ **Note:**  
+> EmuHub is built via GitHub Actions and is currently **not notarized**.  
 > macOS may display a security warning on first launch — this is expected.
 
 ---
