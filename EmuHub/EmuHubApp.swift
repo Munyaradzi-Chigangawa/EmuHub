@@ -17,7 +17,7 @@ struct EmuHubApp: App {
                 MenuBarRootView()
                     .environmentObject(state)
             } label: {
-                Image(systemName: "cpu")
+                Image(systemName: "iphone.and.arrow.forward")
             }
             .menuBarExtraStyle(.window)
 
