@@ -783,19 +783,12 @@ private struct QuickActionPanel: View {
 private struct QuickActionDetailPage: View {
     @EnvironmentObject var state: AppState
     let destination: QuickActionDestination
-    @Environment(\.openURL) private var openURL
 
     var body: some View {
         switch destination {
         case .checkForUpdates:
-            QuickActionInfoPage(
-                title: "Check for Updates",
-                description: "Keep EmuHub up to date with the latest improvements and fixes.",
-                primaryButtonTitle: "Open Releases",
-                primaryAction: {
-                    openURL(URL(string: "https://github.com/Munyaradzi-Chigangawa/EmuHub/releases")!)
-                }
-            )
+            CheckForUpdatesPage()
+                .environmentObject(state)
         case .settings:
             ScrollView {
                 SettingsView(preferredWidth: nil)
@@ -836,34 +829,6 @@ private struct QuickActionInfoPage: View {
         }
     }
 }
-
-//private struct QuickActionAboutPage: View {
-//    private var appVersion: String {
-//        let short = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "-"
-//        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "-"
-//        return "\(short) (\(build))"
-//    }
-//
-//    var body: some View {
-//        ScrollView {
-//            VStack(alignment: .leading, spacing: 10) {
-//                Text("EmuHub")
-//                    .font(.title3.weight(.semibold))
-//
-//                Text("Android emulator and device manager for macOS menu bar.")
-//                    .foregroundStyle(.secondary)
-//
-//                Text("Version \(appVersion)")
-//                    .font(.callout)
-//                    .foregroundStyle(.secondary)
-//
-//                Spacer(minLength: 0)
-//            }
-//            .padding(20)
-//            .frame(maxWidth: .infinity, alignment: .leading)
-//        }
-//    }
-//}
 
 // MARK: - Reusable Components
 

@@ -42,4 +42,21 @@ struct EmuHubTests {
         let path = AndroidToolchain.defaultMacSdkPath()
         #expect(path.hasSuffix("/Library/Android/sdk"))
     }
+
+    @Test("ReleaseUpdateService normalizes tags and compares semantic versions")
+    func releaseVersionComparison() {
+        let normalized = ReleaseUpdateService.normalizedVersion(from: "v1.2.3")
+        #expect(normalized == "1.2.3")
+
+        #expect(ReleaseUpdateService.compareVersion("1.2.3", "1.2.4") == .orderedAscending)
+        #expect(ReleaseUpdateService.compareVersion("1.2.4", "1.2.3") == .orderedDescending)
+        #expect(ReleaseUpdateService.compareVersion("1.2.0", "1.2") == .orderedSame)
+    }
+
+    @Test("ReleaseUpdateService ignores metadata suffixes for equality checks")
+    func releaseVersionMetadataIsIgnored() {
+        #expect(ReleaseUpdateService.normalizedVersion(from: "v1.2.3+45") == "1.2.3")
+        #expect(ReleaseUpdateService.normalizedVersion(from: "1.2.3-beta") == "1.2.3")
+        #expect(ReleaseUpdateService.compareVersion("1.2.3", "1.2.3+45") == .orderedSame)
+    }
 }
