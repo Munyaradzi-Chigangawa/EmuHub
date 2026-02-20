@@ -545,6 +545,8 @@ private struct FooterView: View {
                 isRefreshing: isRefreshing,
                 onRefresh: onRefresh
             )
+
+            SettingsButton()
             
             Spacer()
             
@@ -552,6 +554,25 @@ private struct FooterView: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
+    }
+}
+
+private struct SettingsButton: View {
+    var body: some View {
+        SettingsLink {
+            HStack(spacing: 6) {
+                Image(systemName: "gearshape")
+                    .font(.system(size: 11, weight: .semibold))
+
+                Text("Settings")
+                    .font(.system(size: 12, weight: .medium))
+            }
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 7)
+            .background(Capsule().fill(Color.secondary.opacity(0.08)))
+        }
+        .buttonStyle(.plain)
     }
 }
 
