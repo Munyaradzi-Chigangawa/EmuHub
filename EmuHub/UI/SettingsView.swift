@@ -12,6 +12,19 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
+            Section("General") {
+                Toggle("Launch at Login", isOn: launchAtLoginBinding)
+                Text("Automatically start EmuHub when you log in to macOS.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                if let launchAtLoginError = state.launchAtLoginError {
+                    Text(launchAtLoginError)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
+            }
+
             Section("Android SDK") {
                 TextField("SDK Path", text: $state.sdkPath)
                     .textFieldStyle(.roundedBorder)
@@ -36,7 +49,7 @@ struct SettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            
+
             Section {
                 Button("Refresh Now") {
                     Task { await state.refreshAll() }
@@ -63,6 +76,16 @@ struct SettingsView: View {
         }
         .padding()
         .frame(width: 520)
+        .onAppear {
+            state.refreshLaunchAtLoginState()
+        }
+    }
+
+    private var launchAtLoginBinding: Binding<Bool> {
+        Binding(
+            get: { state.launchAtLoginEnabled },
+            set: { state.setLaunchAtLogin($0) }
+        )
     }
 
     private var appVersion: String {
