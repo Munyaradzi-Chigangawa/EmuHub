@@ -19,6 +19,9 @@ final class AppState: ObservableObject {
     @Published var lastRefreshAt: Date?
     @Published var launchAtLoginEnabled = false
     @Published var launchAtLoginError: String?
+    @Published var isCheckingForUpdates = false
+    @Published var updateCheckResult: UpdateCheckResult?
+    @Published var updateError: String?
 
     @AppStorage("sdkPath") var sdkPath: String =  "" // e.g. /Users/you/Library/Android/sdk
     @AppStorage("emulatorExtraArgs") var emulatorExtraArgs: String = "-no-snapshot-load"
@@ -26,6 +29,7 @@ final class AppState: ObservableObject {
 
     let emulatorService = EmulatorService()
     let adbService = AdbService()
+    let releaseUpdateService = ReleaseUpdateService()
 
     private var refreshTask: Task<Void, Never>?
 
@@ -150,6 +154,21 @@ final class AppState: ObservableObject {
             if fm.fileExists(atPath: auto) {
                 sdkPath = auto
             }
+        }
+    }
+
+    func checkForUpdates() async {
+        let currentVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
+
+        isCheckingForUpdates = true
+        updateError = nil
+        defer { isCheckingForUpdates = false }
+
+        do {
+            updateCheckResult = try await releaseUpdateService.checkForUpdates(currentVersion: currentVersion)
+        } catch {
+            updateCheckResult = nil
+            updateError = error.localizedDescription
         }
     }
 }
