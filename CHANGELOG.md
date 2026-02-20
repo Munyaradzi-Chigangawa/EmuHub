@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ---
 
 ## [Unreleased]
+
+### Planned
+- Developer ID signing and macOS notarization
+- Homebrew cask installation 
+- Advanced emulator controls (cold boot, wipe data)
+- Grouped display of emulators and physical devices
+- In-app help for USB debugging authorization
+- Improved diagnostics and logging
+
+---
+
+## [1.1.4] - 2026-02-20
 ### Added
 - In-app **Check for Updates** flow from the quick actions menu.
 - GitHub Releases integration (`/releases/latest`) to compare the installed app version against the newest published release.
@@ -19,16 +31,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Fixed
 - "Check for Updates" now handles equal versions gracefully by showing that the user already has the latest version.
 - Prevented false-positive update prompts caused by release metadata suffixes like `+build` or `-beta`.
-
-### Planned
-- Developer ID signing and macOS notarization
-- Homebrew cask installation 
-- Advanced emulator controls (cold boot, wipe data)
-- Grouped display of emulators and physical devices
-- In-app help for USB debugging authorization
-- Improved diagnostics and logging
-
----
 
 ## [1.1.3] - 2026-02-05
 ### Added
