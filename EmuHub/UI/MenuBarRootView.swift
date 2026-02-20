@@ -11,7 +11,7 @@ struct MenuBarRootView: View {
     @EnvironmentObject var state: AppState
     @State private var hoveredEmulator: String?
     @State private var hoveredAVD: String?
-    @State private var isShowingSettings = false
+    @State private var isShowingQuickActions = false
     
     var body: some View {
         VStack(spacing: 0) {
@@ -19,8 +19,8 @@ struct MenuBarRootView: View {
                 runningCount: state.running.count,
                 emulatorCount: state.running.filter(\.isEmulator).count,
                 physicalCount: state.running.filter { !$0.isEmulator }.count,
-                onOpenSettings: {
-                    isShowingSettings = true
+                onOpenQuickActions: {
+                    isShowingQuickActions = true
                 }
             )
             
@@ -78,8 +78,8 @@ struct MenuBarRootView: View {
         .onDisappear {
             state.stopAutoRefresh()
         }
-        .sheet(isPresented: $isShowingSettings) {
-            SettingsView()
+        .sheet(isPresented: $isShowingQuickActions) {
+            QuickActionsSheet()
                 .environmentObject(state)
         }
     }
@@ -91,7 +91,7 @@ private struct HeaderView: View {
     let runningCount: Int
     let emulatorCount: Int
     let physicalCount: Int
-    let onOpenSettings: () -> Void
+    let onOpenQuickActions: () -> Void
     
     var body: some View {
         HStack(spacing: 12) {
@@ -117,7 +117,7 @@ private struct HeaderView: View {
                         .foregroundStyle(.secondary)
                 }
 
-                Button(action: onOpenSettings) {
+                Button(action: onOpenQuickActions) {
                     Image(systemName: "gearshape")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(.secondary)
@@ -632,6 +632,189 @@ private struct QuitButton: View {
             .background(Capsule().fill(Color.secondary.opacity(0.08)))
         }
         .buttonStyle(.plain)
+    }
+}
+
+
+
+private enum QuickActionDestination: String, CaseIterable, Identifiable, Hashable {
+    case checkForUpdates
+    case settings
+    case help
+    case about
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .checkForUpdates: return "Check for Updates"
+        case .settings: return "Settings"
+        case .help: return "Help"
+        case .about: return "About"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .checkForUpdates: return "arrow.triangle.2.circlepath.circle"
+        case .settings: return "gearshape"
+        case .help: return "questionmark.circle"
+        case .about: return "info.circle"
+        }
+    }
+
+    var tint: Color {
+        switch self {
+        case .checkForUpdates: return .blue
+        case .settings: return .purple
+        case .help: return .orange
+        case .about: return .green
+        }
+    }
+}
+
+private struct QuickActionsSheet: View {
+    @EnvironmentObject var state: AppState
+    @Environment(\.dismiss) private var dismiss
+    @State private var navigationPath: [QuickActionDestination] = []
+
+    var body: some View {
+        NavigationStack(path: $navigationPath) {
+            QuickActionsMenuView(path: $navigationPath, dismiss: dismiss)
+                .navigationDestination(for: QuickActionDestination.self) { destination in
+                    QuickActionDetailView(destination: destination)
+                        .environmentObject(state)
+                }
+        }
+        .frame(minWidth: 460, minHeight: 440)
+    }
+}
+
+private struct QuickActionsMenuView: View {
+    @Binding var path: [QuickActionDestination]
+    let dismiss: DismissAction
+
+    var body: some View {
+        List {
+            Section("App") {
+                ForEach(QuickActionDestination.allCases) { item in
+                    Button {
+                        path.append(item)
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: item.icon)
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(item.tint)
+                                .frame(width: 20)
+
+                            Text(item.title)
+                                .font(.system(size: 13, weight: .medium))
+
+                            Spacer()
+
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundStyle(.tertiary)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .listStyle(.insetGrouped)
+        .navigationTitle("EmuHub")
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Close") { dismiss() }
+            }
+        }
+    }
+}
+
+private struct QuickActionDetailView: View {
+    @EnvironmentObject var state: AppState
+    let destination: QuickActionDestination
+    @Environment(\.openURL) private var openURL
+
+    var body: some View {
+        Group {
+            switch destination {
+            case .checkForUpdates:
+                QuickActionInfoPage(
+                    title: "Check for Updates",
+                    description: "Keep EmuHub up to date with the latest improvements and fixes.",
+                    primaryButtonTitle: "Open Releases",
+                    primaryAction: {
+                        openURL(URL(string: "https://github.com/Munyaradzi-Chigangawa/EmuHub/releases")!)
+                    }
+                )
+            case .settings:
+                SettingsView()
+                    .environmentObject(state)
+            case .help:
+                QuickActionInfoPage(
+                    title: "Help",
+                    description: "Need guidance? Open the project docs and contribution guides.",
+                    primaryButtonTitle: "Open Documentation",
+                    primaryAction: {
+                        openURL(URL(string: "https://github.com/Munyaradzi-Chigangawa/EmuHub#readme")!)
+                    }
+                )
+            case .about:
+                QuickActionAboutPage()
+            }
+        }
+        .navigationTitle(destination.title)
+    }
+}
+
+private struct QuickActionInfoPage: View {
+    let title: String
+    let description: String
+    let primaryButtonTitle: String
+    let primaryAction: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text(title)
+                .font(.title3.weight(.semibold))
+
+            Text(description)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+
+            Button(primaryButtonTitle, action: primaryAction)
+                .buttonStyle(.borderedProminent)
+
+            Spacer()
+        }
+        .padding(20)
+    }
+}
+
+private struct QuickActionAboutPage: View {
+    private var appVersion: String {
+        let short = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "-"
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "-"
+        return "\(short) (\(build))"
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("EmuHub")
+                .font(.title3.weight(.semibold))
+
+            Text("Android emulator and device manager for macOS menu bar.")
+                .foregroundStyle(.secondary)
+
+            Text("Version \(appVersion)")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+
+            Spacer()
+        }
+        .padding(20)
     }
 }
 
