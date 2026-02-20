@@ -118,4 +118,10 @@ private struct SettingsSection<Content: View>: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
+
+    private var appVersion: String {
+        let short = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "-"
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "-"
+        return "\(short) (\(build))"
+    }
 }
