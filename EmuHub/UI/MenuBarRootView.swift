@@ -722,7 +722,7 @@ private struct QuickActionsMenuView: View {
                 }
             }
         }
-        .listStyle(.insetGrouped)
+        .listStyle(.inset)
         .navigationTitle("EmuHub")
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
