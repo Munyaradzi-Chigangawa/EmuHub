@@ -845,7 +845,9 @@ private struct CheckForUpdatesPage: View {
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
 
-                        Text(result.hasUpdate ? "A new version is available." : "You're up to date.")
+                        Text(result.hasUpdate
+                             ? "A new version is available."
+                             : "You already have the latest version installed.")
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(result.hasUpdate ? .green : .secondary)
 
@@ -855,7 +857,7 @@ private struct CheckForUpdatesPage: View {
                             }
                             .buttonStyle(.bordered)
 
-                            if let downloadURL = result.downloadURL {
+                            if result.hasUpdate, let downloadURL = result.downloadURL {
                                 Button("Download") {
                                     openURL(downloadURL)
                                 }

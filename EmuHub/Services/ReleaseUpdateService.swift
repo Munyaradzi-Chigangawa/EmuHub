@@ -15,7 +15,8 @@ struct ReleaseUpdateService {
         let release = try await fetchLatestRelease()
         let latestVersion = Self.normalizedVersion(from: release.tagName)
         let currentNormalized = Self.normalizedVersion(from: currentVersion)
-        let hasUpdate = Self.compareVersion(currentNormalized, latestVersion) == .orderedAscending
+        let comparison = Self.compareVersion(currentNormalized, latestVersion)
+        let hasUpdate = comparison == .orderedAscending
 
         let preferredAsset = release.assets.first { asset in
             asset.name.localizedCaseInsensitiveContains("mac") ||
@@ -52,9 +53,16 @@ struct ReleaseUpdateService {
     }
 
     static func normalizedVersion(from versionText: String) -> String {
-        versionText
+        let cleaned = versionText
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .replacingOccurrences(of: "^v", with: "", options: .regularExpression)
+
+        // Ignore metadata suffixes like "-beta" and "+build.5" for update comparison.
+        if let metadataStart = cleaned.firstIndex(where: { $0 == "-" || $0 == "+" }) {
+            return String(cleaned[..<metadataStart])
+        }
+
+        return cleaned
     }
 
     static func compareVersion(_ lhs: String, _ rhs: String) -> ComparisonResult {
@@ -77,7 +85,7 @@ struct ReleaseUpdateService {
         normalizedVersion(from: version)
             .split(separator: ".")
             .map { chunk in
-                Int(chunk.filter(\.isNumber)) ?? 0
+                Int(chunk.prefix { $0.isNumber }) ?? 0
             }
     }
 }
@@ -125,4 +133,3 @@ private struct GitHubReleaseAsset: Decodable {
         case browserDownloadURL = "browser_download_url"
     }
 }
-
