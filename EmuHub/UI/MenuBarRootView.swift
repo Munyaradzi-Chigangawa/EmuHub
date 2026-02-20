@@ -163,7 +163,7 @@ private struct AppIconView: View {
                 )
                 .frame(width: 36, height: 36)
             
-            Image(systemName: "cpu")
+            Image(systemName: "iphone.and.arrow.forward")
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(
                     LinearGradient(
@@ -803,16 +803,9 @@ private struct QuickActionDetailPage: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         case .help:
-            QuickActionInfoPage(
-                title: "Help",
-                description: "Need guidance? Open the project docs and contribution guides.",
-                primaryButtonTitle: "Open Documentation",
-                primaryAction: {
-                    openURL(URL(string: "https://github.com/Munyaradzi-Chigangawa/EmuHub#readme")!)
-                }
-            )
+            HelpView()
         case .about:
-            QuickActionAboutPage()
+            AboutPage()
         }
     }
 }
@@ -844,33 +837,33 @@ private struct QuickActionInfoPage: View {
     }
 }
 
-private struct QuickActionAboutPage: View {
-    private var appVersion: String {
-        let short = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "-"
-        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "-"
-        return "\(short) (\(build))"
-    }
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 10) {
-                Text("EmuHub")
-                    .font(.title3.weight(.semibold))
-
-                Text("Android emulator and device manager for macOS menu bar.")
-                    .foregroundStyle(.secondary)
-
-                Text("Version \(appVersion)")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-
-                Spacer(minLength: 0)
-            }
-            .padding(20)
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-    }
-}
+//private struct QuickActionAboutPage: View {
+//    private var appVersion: String {
+//        let short = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "-"
+//        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "-"
+//        return "\(short) (\(build))"
+//    }
+//
+//    var body: some View {
+//        ScrollView {
+//            VStack(alignment: .leading, spacing: 10) {
+//                Text("EmuHub")
+//                    .font(.title3.weight(.semibold))
+//
+//                Text("Android emulator and device manager for macOS menu bar.")
+//                    .foregroundStyle(.secondary)
+//
+//                Text("Version \(appVersion)")
+//                    .font(.callout)
+//                    .foregroundStyle(.secondary)
+//
+//                Spacer(minLength: 0)
+//            }
+//            .padding(20)
+//            .frame(maxWidth: .infinity, alignment: .leading)
+//        }
+//    }
+//}
 
 // MARK: - Reusable Components
 
