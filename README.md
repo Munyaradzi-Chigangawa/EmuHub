@@ -26,6 +26,7 @@ It allows you to start, monitor, and stop Android emulators directly from the ma
 - Settings panel for Android SDK path and emulator options
 - Optional automatic refresh of emulator and device state
 - Launch at login support
+- In-app **Check for Updates** (GitHub Releases-based)
 
 ---
 
@@ -85,6 +86,9 @@ You can customize emulator startup behavior using additional arguments, for exam
   2. Accept the USB debugging prompt on the device
 - Start new emulators from the **Available** section
 - Open **Settings** to configure SDK path, refresh interval, and startup behavior
+- Open Quick Actions (gear icon) → **Check for Updates** to compare your installed version with the latest GitHub Release
+- If a newer version exists, use **Download** to fetch the latest release artifact
+- If your version matches latest, EmuHub shows a clear "latest version installed" status
 
 ---
 
