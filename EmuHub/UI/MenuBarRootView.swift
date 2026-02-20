@@ -816,31 +816,32 @@ private struct QuickActionDetailView: View {
             Divider()
 
             Group {
-            switch destination {
-            case .checkForUpdates:
-                QuickActionInfoPage(
-                    title: "Check for Updates",
-                    description: "Keep EmuHub up to date with the latest improvements and fixes.",
-                    primaryButtonTitle: "Open Releases",
-                    primaryAction: {
-                        openURL(URL(string: "https://github.com/Munyaradzi-Chigangawa/EmuHub/releases")!)
-                    }
-                )
-            case .settings:
-                SettingsView(preferredWidth: nil)
-                    .environmentObject(state)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            case .help:
-                QuickActionInfoPage(
-                    title: "Help",
-                    description: "Need guidance? Open the project docs and contribution guides.",
-                    primaryButtonTitle: "Open Documentation",
-                    primaryAction: {
-                        openURL(URL(string: "https://github.com/Munyaradzi-Chigangawa/EmuHub#readme")!)
-                    }
-                )
-            case .about:
-                QuickActionAboutPage()
+                switch destination {
+                case .checkForUpdates:
+                    QuickActionInfoPage(
+                        title: "Check for Updates",
+                        description: "Keep EmuHub up to date with the latest improvements and fixes.",
+                        primaryButtonTitle: "Open Releases",
+                        primaryAction: {
+                            openURL(URL(string: "https://github.com/Munyaradzi-Chigangawa/EmuHub/releases")!)
+                        }
+                    )
+                case .settings:
+                    SettingsView(preferredWidth: nil)
+                        .environmentObject(state)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                case .help:
+                    QuickActionInfoPage(
+                        title: "Help",
+                        description: "Need guidance? Open the project docs and contribution guides.",
+                        primaryButtonTitle: "Open Documentation",
+                        primaryAction: {
+                            openURL(URL(string: "https://github.com/Munyaradzi-Chigangawa/EmuHub#readme")!)
+                        }
+                    )
+                case .about:
+                    QuickActionAboutPage()
+                }
             }
         }
     }
