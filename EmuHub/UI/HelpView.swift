@@ -34,12 +34,43 @@ private let helpSections: [HelpSection] = [
                 answer: "Click the EmuHub icon in your macOS menu bar. Under the Available section you'll see your Android Virtual Devices (AVDs). Click any AVD's Launch button. The emulator will appear in the Running section once it's active."
             ),
             HelpItem(
+                question: "What are Cold Boot and Wipe & Boot?",
+                answer: "Right-click (or long-press) any AVD card to see launch options. Cold Boot skips the saved snapshot and performs a full restart — useful when the emulator is stuck. Wipe & Boot clears all user data and resets the device to its factory state before booting."
+            ),
+            HelpItem(
                 question: "How do I stop a running emulator?",
                 answer: "In the Running section, hover over the emulator row and click the Stop button that appears. EmuHub sends an adb emu kill command to cleanly terminate the process."
             ),
             HelpItem(
                 question: "Why don't I see any AVDs in the menu?",
                 answer: "EmuHub needs a valid Android SDK path to detect your AVDs. Open Settings and verify the SDK Path is correct. The default location is ~/Library/Android/sdk. Tap Auto-detect to have EmuHub try to find it automatically, then use Refresh Now to reload the list."
+            ),
+            HelpItem(
+                question: "How do I search for a specific AVD?",
+                answer: "Click the magnifying glass icon in the Available section header to reveal the search field. Type any part of the AVD name to filter the list. Press Escape or click the icon again to dismiss the search."
+            ),
+            HelpItem(
+                question: "How do I create a new AVD?",
+                answer: "Click the + icon in the Available section header to open the New AVD screen. Enter a name, choose a system image package, and select a device profile, then tap Create. EmuHub runs avdmanager in the background — the new AVD appears in the list once creation completes."
+            ),
+        ]
+    ),
+    HelpSection(
+        icon: "cpu.fill",
+        iconColor: .indigo,
+        title: "Device Actions",
+        items: [
+            HelpItem(
+                question: "How do I take a screenshot?",
+                answer: "Hover over a running device or emulator in the Running section and click the camera icon. EmuHub captures the screen via adb, saves the PNG to your Desktop, and reveals it in Finder automatically."
+            ),
+            HelpItem(
+                question: "How do I install an APK?",
+                answer: "Drag an APK file from Finder and drop it onto any running device or emulator row in the Running section. A progress indicator appears while adb installs the package. You'll see a success banner when it's done, or an error message if the install fails."
+            ),
+            HelpItem(
+                question: "Can I control physical Android devices through EmuHub?",
+                answer: "Physical devices appear in the Running section for visibility. Screenshot and APK install work on physical devices just like emulators. However, Start and Stop actions are emulator-only — EmuHub won't send power commands to real hardware."
             ),
         ]
     ),
@@ -65,6 +96,10 @@ private let helpSections: [HelpSection] = [
                 answer: "Use Refresh Now in Settings to force an immediate update, or lower the auto-refresh interval. If the issue persists, check that adb is accessible — EmuHub uses the adb binary inside your SDK's platform-tools folder."
             ),
             HelpItem(
+                question: "New AVD creation fails",
+                answer: "AVD creation requires avdmanager, which ships with Android Command-line Tools (not just the emulator package). Open Android Studio's SDK Manager, go to SDK Tools, and make sure Android SDK Command-line Tools is installed. Then verify your SDK Path in EmuHub Settings points to the correct root folder."
+            ),
+            HelpItem(
                 question: "macOS says EmuHub can't be opened",
                 answer: "EmuHub is signed with an Apple Personal Team certificate and is not notarized. To open it: right-click EmuHub.app → Open → Open. Alternatively, go to System Settings → Privacy & Security and click Open Anyway. You only need to do this once."
             ),
@@ -77,15 +112,19 @@ private let helpSections: [HelpSection] = [
         items: [
             HelpItem(
                 question: "What are Extra Launch Arguments?",
-                answer: "Extra Args are additional command-line flags passed to the emulator at launch. Common examples: -no-snapshot-load to always cold-boot, -gpu host to use your Mac's GPU, -no-audio to disable audio. Separate multiple flags with spaces."
+                answer: "Extra Args are additional command-line flags passed to the emulator at launch. Common examples: -no-snapshot-load to always cold-boot, -gpu host to use your Mac's GPU, -no-audio to disable audio, -wipe-data to reset user data. Separate multiple flags with spaces."
             ),
             HelpItem(
                 question: "How does auto-refresh work?",
                 answer: "EmuHub polls adb at a regular interval to detect changes in emulator and device state. You can configure the interval between 3 and 60 seconds in Settings → Refresh. A shorter interval means faster updates but slightly more CPU usage."
             ),
             HelpItem(
-                question: "Can I control physical Android devices through EmuHub?",
-                answer: "No — physical devices are shown for visibility only. EmuHub intentionally treats them as read-only to prevent accidental actions on real hardware. You can see their connection state, but start and stop actions are available only for emulators."
+                question: "How do I make EmuHub launch at login?",
+                answer: "Open Settings → General and toggle on Launch at Login. EmuHub uses the macOS ServiceManagement API to register as a login item — no third-party helpers needed. This requires macOS 13 or later."
+            ),
+            HelpItem(
+                question: "How do I update EmuHub?",
+                answer: "Open the hamburger menu (≡) and tap Software Update. EmuHub checks GitHub Releases for a newer version. If one is available, click Install Update — EmuHub downloads the release zip, swaps the app bundle in-place, and relaunches automatically."
             ),
         ]
     ),

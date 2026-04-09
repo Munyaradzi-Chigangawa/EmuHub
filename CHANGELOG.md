@@ -21,6 +21,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.2.1] - 2026-04-10
+
+### Changed
+- **Help section expanded** — Added coverage for all features introduced in 1.2.0 that were missing from the FAQ: Cold Boot and Wipe & Boot launch options, screenshot capture, APK drag-and-drop install, AVD search/filter, Create AVD workflow, Launch at Login, and the in-app Software Update flow.
+- Added a new **Device Actions** section to the Help view grouping screenshot and APK install topics together.
+- Added a Troubleshooting entry for AVD creation failures caused by a missing `avdmanager` / Android Command-line Tools installation.
+
+---
+
 ## [1.2.0] - 2026-04-09
 
 ### Added
