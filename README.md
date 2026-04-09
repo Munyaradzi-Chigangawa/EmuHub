@@ -1,8 +1,8 @@
 # EmuHub
 
-EmuHub is a lightweight macOS **menu bar utility** for managing Android Emulators (AVDs) and viewing connected Android devices.
+EmuHub is a lightweight macOS **menu bar utility** for managing Android emulators (AVDs) and connected physical Android devices — with zero Terminal required.
 
-It allows you to start, monitor, and stop Android emulators directly from the macOS menu bar — without touching the Terminal — while also showing the status of any connected physical Android devices.
+Click the menu bar icon, launch an AVD, and monitor every connected device. That's it.
 
 ---
 
@@ -10,117 +10,144 @@ It allows you to start, monitor, and stop Android emulators directly from the ma
 
 ![Menu Bar](docs/screenshots/EmuHub.png)
 
-## ✨ Features
+---
 
-- macOS menu bar–only application
-- List available Android Virtual Devices (AVDs)
-- Start emulators with configurable launch arguments
-- Detect **running Android emulators** using `adb`
-- Detect **connected physical Android devices**
-- Stop emulators cleanly using `adb emu kill`
-- Display physical device states:
-  - `device`
-  - `unauthorized`
-  - `offline`
-- Helpful messaging when USB debugging has not been authorized
-- Settings panel for Android SDK path and emulator options
-- Optional automatic refresh of emulator and device state
-- Launch at login support
-- In-app **Check for Updates** (GitHub Releases-based)
+## Features
+
+### Emulator Management
+- List all configured Android Virtual Devices (AVDs) with device-type icons — phone, tablet, TV, Wear OS, and Automotive
+- Launch any AVD with a single click
+- Cleanly stop running emulators via `adb emu kill`
+- Running emulators display their resolved AVD name (e.g., "Pixel 7") and active port
+
+### Physical Device Visibility
+- Automatically detects connected physical Android devices over USB
+- Displays the real device model name (e.g., "Pixel 8 Pro") fetched via `adb shell getprop`
+- Shows the Android version for each authorized device
+- Correct tablet icon shown when the connected device is a tablet
+- Clear status labels for unauthorized and offline devices with actionable guidance
+
+### Settings & Configuration
+- Auto-detect Android SDK path, or configure it manually
+- Pass custom launch arguments to the emulator (e.g., `-no-snapshot-load -gpu host`)
+- Configurable auto-refresh interval (3–60 seconds)
+- Launch at login support (macOS 13+)
+
+### Updates
+- In-app update checker via GitHub Releases API
+- Shows installed vs latest version with direct download link
+- Auto-checks on first open of the Software Update page
 
 ---
 
-## 📦 Installation
+## Installation
 
 ### macOS (Manual Install)
 
-1. Download the latest release from **GitHub Releases**
-2. Unzip the downloaded file
-3. Drag **EmuHub.app** into the **Applications** folder
-4. First launch: open Terminal and run:
+1. Download the latest `.zip` from **[GitHub Releases](https://github.com/Munyaradzi-Chigangawa/EmuHub/releases)**
+2. Unzip and drag **EmuHub.app** into your **Applications** folder
+3. On first launch, remove the quarantine attribute:
 
-``` bash
+```bash
 sudo xattr -dr com.apple.quarantine /Applications/EmuHub.app
 ```
 
-Then launch **EmuHub** normally.
+Then open EmuHub normally from Applications.
 
-> ⚠️ **Note:**  
-> EmuHub is built via GitHub Actions and is currently **not notarized**.  
-> macOS may display a security warning on first launch — this is expected.
-
----
-
-## 🖥️ System Requirements
-
-- macOS 13.0 (Ventura) or newer
-- Android SDK installed  
-  - Default location: `~/Library/Android/sdk`
-- Android Emulator & `adb` available
-- USB debugging enabled on physical devices (optional)
+> **Note:** EmuHub is built via GitHub Actions and is currently **not notarized**.  
+> macOS will show a security warning on first launch — this is expected behavior for unsigned apps.
 
 ---
 
-## ⚙️ Configuration
+## System Requirements
 
-### Android SDK
+| Requirement | Detail |
+|---|---|
+| macOS | 13.0 Ventura or newer |
+| Android SDK | Installed at `~/Library/Android/sdk` (auto-detected) |
+| adb | Included in `platform-tools` inside the SDK |
+| Android Emulator | Included in `emulator` inside the SDK |
+| Physical devices | Optional — USB debugging must be enabled |
 
-EmuHub automatically attempts to locate the Android SDK.
+---
 
-If detection fails, you can manually set the SDK path in **Settings**:
+## Usage
 
+### Starting an Emulator
+1. Click the **EmuHub** icon in the menu bar
+2. In the **Available** section, find the AVD you want to launch
+3. Click **Launch** (or hover for the button to appear)
+4. The emulator boots and appears in the **Running** section
+
+### Stopping an Emulator
+1. In the **Running** section, hover over the emulator row
+2. Click **Stop** — EmuHub sends `adb emu kill` to cleanly terminate it
+
+### Physical Devices
+- Connected Android phones and tablets appear automatically in the **Running** section
+- The device model name (e.g., "Samsung Galaxy S24") and Android version are shown
+- Physical devices are **read-only** — Stop and Launch actions are not available for real hardware
+- If a device shows **Unauthorized**, unlock the device and tap **Allow** on the USB debugging prompt
+- If a device shows **Offline**, try a different cable or run `adb kill-server` in Terminal
+
+### Software Update
+- Open the menu (≡ icon) → **Software Update**
+- EmuHub compares your installed version with the latest GitHub Release
+- Click **Download** if a newer version is available
+
+---
+
+## Physical Device Handling
+
+EmuHub intentionally treats physical devices as **read-only** to prevent accidental actions on real hardware.
+
+| State | Meaning | Action Required |
+|---|---|---|
+| Connected | USB debugging authorized | None — device is visible |
+| Unauthorized | USB debugging prompt pending | Tap **Allow** on the device |
+| Offline | adb can't reach the device | Check USB cable; try `adb kill-server` |
+
+To remove a device from the list: unplug the USB cable or disable USB debugging on the device.
+
+EmuHub fetches the device model and Android version via `adb shell getprop` and caches the result in-session — no repeated queries on each auto-refresh.
+
+---
+
+## Configuration
+
+### Android SDK Path
+
+EmuHub auto-detects the SDK at `~/Library/Android/sdk`. If you installed Android Studio elsewhere:
+
+1. Open the menu → **Settings**
+2. Under **Android SDK**, enter the full path to your SDK root
+3. Click **Auto-detect** to let EmuHub find it automatically
+
+The SDK root must contain `platform-tools/adb` and `emulator/emulator`.
 
 ### Emulator Launch Arguments
 
-You can customize emulator startup behavior using additional arguments, for example:
+Customize startup behavior via **Settings → Emulator → Extra Launch Arguments**:
 
-```bash
-/Library/Android/sdk
-```
+| Flag | Effect |
+|---|---|
+| `-no-snapshot-load` | Always cold-boot (ignore saved state) |
+| `-gpu host` | Use the Mac's GPU for rendering |
+| `-no-audio` | Disable audio output |
+| `-wipe-data` | Factory-reset the AVD on launch |
+| `-no-snapshot-save` | Don't save state on shutdown |
 
----
-
-## 🚀 Usage
-
-- Click the **EmuHub** icon in the macOS menu bar
-- The **Running** section displays:
-  - Active emulators (with a Stop action)
-  - Connected physical devices (read-only)
-- If a physical device is marked **unauthorized**:
-  1. Unlock the device
-  2. Accept the USB debugging prompt on the device
-- Start new emulators from the **Available** section
-- Open **Settings** to configure SDK path, refresh interval, and startup behavior
-- Open Quick Actions (gear icon) → **Check for Updates** to compare your installed version with the latest GitHub Release
-- If a newer version exists, use **Download** to fetch the latest release artifact
-- If your version matches latest, EmuHub shows a clear "latest version installed" status
+Separate multiple flags with spaces.
 
 ---
 
-## 🔌 Physical Devices
-
-EmuHub intentionally treats physical devices as **read-only**.
-
-- Physical devices are shown for visibility only
-- Emulator-only actions (such as Stop) are not available for phones or tablets
-- Physical devices cannot be stopped or controlled through EmuHub
-
-To remove a physical device from the list:
-- Unplug the USB cable, or
-- Disable USB debugging on the device
-
-This design prevents accidental or unsafe actions on real hardware.
-
----
-
-## 🛠️ Development
+## Development
 
 ### Built With
 
-- Swift
-- SwiftUI
-- macOS MenuBarExtra API
-- Android `adb` and Emulator CLI tools
+- **Swift 5** · **SwiftUI**
+- **macOS MenuBarExtra API** (window style)
+- **Android adb** and **Emulator CLI** tools
 
 ### Run Locally
 
@@ -130,7 +157,49 @@ cd EmuHub
 open EmuHub.xcodeproj
 ```
 
+Build and run the `EmuHub` scheme. Requires Xcode 15+ and macOS 13+.
+
+### Project Structure
+
+```
+EmuHub/
+├── EmuHubApp.swift          # Entry point — MenuBarExtra + Settings scenes
+├── AppState.swift           # Central ObservableObject — state, refresh, device enrichment
+├── Models/
+│   ├── AVD.swift            # Android Virtual Device model
+│   └── RunningDevice.swift  # Connected device model (emulator or physical)
+├── Services/
+│   ├── AdbService.swift     # adb device listing, stop, property queries
+│   ├── EmulatorService.swift# AVD listing and launch
+│   ├── AndroidToolchain.swift # SDK path resolution
+│   ├── Shell.swift          # Async process execution
+│   └── ReleaseUpdateService.swift # GitHub Releases API
+└── UI/
+    ├── MenuBarRootView.swift # Main popover — navigation, home, device cards
+    ├── SettingsView.swift    # Preferences
+    ├── AboutView.swift       # About page
+    ├── HelpView.swift        # FAQ / Help
+    └── CheckForUpdatesPageView.swift # Software update
+```
+
+---
+
+## Roadmap
+
+See [CHANGELOG.md](CHANGELOG.md) for what's been released. Planned features include:
+
+- APK install via drag-and-drop onto a device card
+- Screenshot capture shortcut (saves to Desktop)
+- ADB port forwarding management panel
+- Cold boot / wipe data shortcuts directly on AVD cards
+- Device log (logcat) viewer
+- Clipboard sync between Mac and Android device
+- Homebrew cask installation
+
+Suggestions and contributions welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ---
 
 ## License
-MIT © Munyaradzi Chigangawa
+
+MIT © Munyaradzi Chigangawa — see [LICENSE](LICENSE) for details.

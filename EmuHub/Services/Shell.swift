@@ -28,7 +28,7 @@ struct ShellResult {
 }
 
 enum Shell {
-    static func run(_ launchPath: String, _ arguments: [String]) async throws -> ShellResult {
+    static func run(_ launchPath: String, _ arguments: [String], stdin: Data? = nil) async throws -> ShellResult {
         try await withCheckedThrowingContinuation { cont in
             let process = Process()
             process.executableURL = URL(fileURLWithPath: launchPath)
@@ -38,6 +38,13 @@ enum Shell {
             let errPipe = Pipe()
             process.standardOutput = outPipe
             process.standardError = errPipe
+
+            if let stdinData = stdin {
+                let inPipe = Pipe()
+                process.standardInput = inPipe
+                inPipe.fileHandleForWriting.write(stdinData)
+                inPipe.fileHandleForWriting.closeFile()
+            }
 
             process.terminationHandler = { p in
                 let outData = outPipe.fileHandleForReading.readDataToEndOfFile()
