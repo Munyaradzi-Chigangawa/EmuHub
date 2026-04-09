@@ -9,160 +9,261 @@ import SwiftUI
 
 struct AboutPage: View {
     private var appVersion: String {
-        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "-"
-        return "\(version)"
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "—"
+    }
+    private var buildNumber: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "—"
     }
 
     var body: some View {
-        ScrollView {
+        ScrollView(showsIndicators: false) {
             VStack(spacing: 0) {
 
-                // MARK: - Hero
-                VStack(spacing: 8) {
-                    Image(systemName: "iphone.and.arrow.forward")
-                        .font(.system(size: 36, weight: .light))
-                        .foregroundStyle(.tint)
-                        .padding(.bottom, 4)
+                // MARK: Hero
+                ZStack {
+                    LinearGradient(
+                        colors: [.blue.opacity(0.09), .purple.opacity(0.09)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
 
-                    Text("EmuHub")
-                        .font(.title2.weight(.semibold))
+                    VStack(spacing: 12) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                .fill(LinearGradient(
+                                    colors: [.blue.opacity(0.22), .purple.opacity(0.22)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ))
+                                .frame(width: 64, height: 64)
+                                .shadow(color: .blue.opacity(0.18), radius: 12, y: 4)
 
-                    Text("Version \(appVersion)")
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
-                        .padding(.top, 1)
+                            Image(systemName: "iphone.and.arrow.forward")
+                                .font(.system(size: 28, weight: .semibold))
+                                .foregroundStyle(LinearGradient(
+                                    colors: [.blue, .purple],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ))
+                        }
+
+                        VStack(spacing: 4) {
+                            Text("EmuHub")
+                                .font(.system(size: 20, weight: .bold, design: .rounded))
+
+                            Text("Android Device Manager for macOS")
+                                .font(.system(size: 12))
+                                .foregroundStyle(.secondary)
+
+                            HStack(spacing: 8) {
+                                VersionBadge(label: "v\(appVersion)")
+                                Text("·").foregroundStyle(.quaternary)
+                                VersionBadge(label: "Build \(buildNumber)")
+                            }
+                            .padding(.top, 2)
+                        }
+                    }
+                    .padding(.vertical, 28)
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 24)
-                .padding(.horizontal, 20)
 
                 Divider()
 
-                // MARK: - Description
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("About")
-                        .font(.caption)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(.secondary)
-                        .textCase(.uppercase)
-                        .kerning(0.4)
+                // MARK: What EmuHub does
+                VStack(alignment: .leading, spacing: 12) {
+                    AboutSectionLabel("Overview")
 
-                    Text("A lightweight macOS menu bar utility for managing Android emulators (AVDs) and connected physical devices — no Terminal required.")
-                        .font(.subheadline)
+                    Text("A lightweight menu bar utility for managing Android Virtual Devices and connected physical Android devices — with zero Terminal required. Click the icon, launch an AVD, and you're done.")
+                        .font(.system(size: 12.5))
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
-                        .lineSpacing(3)
+                        .lineSpacing(4)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 20)
+                .padding(.horizontal, 18)
                 .padding(.vertical, 16)
 
                 Divider()
 
-                // MARK: - Details
-                VStack(spacing: 0) {
-                    AboutRow(label: "Developer", value: "Munyaradzi Chigangawa")
-                    Divider().padding(.leading, 20)
-                    AboutRow(label: "License", value: "MIT")
-                    Divider().padding(.leading, 20)
-                    AboutRow(label: "Platform", value: "macOS 13.0+")
+                // MARK: Feature highlights
+                VStack(alignment: .leading, spacing: 10) {
+                    AboutSectionLabel("Features")
+
+                    let features: [(String, Color, String)] = [
+                        ("square.stack.3d.up.fill", .blue, "List, launch, cold-boot, and wipe AVDs"),
+                        ("plus.circle.fill", .indigo, "Create new AVDs without Android Studio"),
+                        ("iphone", .blue, "Physical device visibility with model resolution"),
+                        ("camera.fill", .purple, "Screenshot capture saved to Desktop"),
+                        ("arrow.down.app.fill", .orange, "APK drag-and-drop install"),
+                        ("bolt.circle.fill", .green, "Auto-refresh with configurable interval"),
+                        ("arrow.trianglehead.2.clockwise.rotate.90.circle", .teal, "In-app update checker via GitHub Releases"),
+                    ]
+
+                    VStack(spacing: 6) {
+                        ForEach(features, id: \.2) { icon, color, label in
+                            FeatureRow(icon: icon, color: color, label: label)
+                        }
+                    }
                 }
-                .padding(.vertical, 4)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 18)
+                .padding(.vertical, 16)
 
                 Divider()
 
-                // MARK: - Links
+                // MARK: Details
                 VStack(spacing: 0) {
-                    AboutLink(
-                        icon: "star",
-                        label: "GitHub Repository",
-                        url: "https://github.com/Munyaradzi-Chigangawa/EmuHub"
-                    )
-                    Divider().padding(.leading, 44)
-                    AboutLink(
-                        icon: "doc.text",
-                        label: "Changelog",
-                        url: "https://github.com/Munyaradzi-Chigangawa/EmuHub/blob/main/CHANGELOG.md"
-                    )
-                    Divider().padding(.leading, 44)
-                    AboutLink(
-                        icon: "hand.raised",
-                        label: "License (MIT)",
-                        url: "https://github.com/Munyaradzi-Chigangawa/EmuHub/blob/main/LICENSE"
-                    )
-                    Divider().padding(.leading, 44)
-                    AboutLink(
-                        icon: "person.2",
-                        label: "Contributing",
-                        url: "https://github.com/Munyaradzi-Chigangawa/EmuHub/blob/main/CONTRIBUTING.md"
-                    )
+                    AboutInfoRow(label: "Developer", value: "Munyaradzi Chigangawa")
+                    Divider().padding(.leading, 18)
+                    AboutInfoRow(label: "License", value: "MIT Open Source")
+                    Divider().padding(.leading, 18)
+                    AboutInfoRow(label: "Requires", value: "macOS 13 Ventura or later")
+                    Divider().padding(.leading, 18)
+                    AboutInfoRow(label: "Built with", value: "Swift · SwiftUI")
                 }
-                .padding(.vertical, 4)
 
                 Divider()
 
-                // MARK: - Footer
-                Text("© 2026 Munyaradzi Chigangawa")
+                // MARK: Links
+                VStack(spacing: 0) {
+                    AboutLinkRow(icon: "star.fill", color: .yellow,
+                                 label: "GitHub Repository",
+                                 url: "https://github.com/Munyaradzi-Chigangawa/EmuHub")
+                    Divider().padding(.leading, 46)
+                    AboutLinkRow(icon: "doc.text.fill", color: .blue,
+                                 label: "Changelog",
+                                 url: "https://github.com/Munyaradzi-Chigangawa/EmuHub/blob/main/CHANGELOG.md")
+                    Divider().padding(.leading, 46)
+                    AboutLinkRow(icon: "exclamationmark.bubble.fill", color: .red,
+                                 label: "Report an Issue",
+                                 url: "https://github.com/Munyaradzi-Chigangawa/EmuHub/issues")
+                    Divider().padding(.leading, 46)
+                    AboutLinkRow(icon: "person.2.fill", color: .purple,
+                                 label: "Contributing Guide",
+                                 url: "https://github.com/Munyaradzi-Chigangawa/EmuHub/blob/main/CONTRIBUTING.md")
+                    Divider().padding(.leading, 46)
+                    AboutLinkRow(icon: "hand.raised.fill", color: .green,
+                                 label: "MIT License",
+                                 url: "https://github.com/Munyaradzi-Chigangawa/EmuHub/blob/main/LICENSE")
+                }
+
+                Divider()
+
+                // MARK: Footer
+                Text("© 2026 Munyaradzi Chigangawa · MIT License")
                     .font(.caption2)
                     .foregroundStyle(.quaternary)
                     .padding(.vertical, 14)
             }
         }
-        .frame(minHeight: 480)
     }
 }
 
-// MARK: - Subviews
+// MARK: - Components
 
-private struct AboutRow: View {
+private struct VersionBadge: View {
+    let label: String
+
+    var body: some View {
+        Text(label)
+            .font(.system(size: 11, weight: .medium, design: .monospaced))
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(
+                Capsule()
+                    .fill(Color.secondary.opacity(0.08))
+                    .overlay(Capsule().strokeBorder(Color.secondary.opacity(0.12), lineWidth: 1))
+            )
+    }
+}
+
+private struct AboutSectionLabel: View {
+    let text: String
+    init(_ text: String) { self.text = text }
+
+    var body: some View {
+        Text(text.uppercased())
+            .font(.system(size: 10.5, weight: .semibold, design: .rounded))
+            .foregroundStyle(.secondary)
+            .kerning(0.5)
+    }
+}
+
+private struct FeatureRow: View {
+    let icon: String
+    let color: Color
+    let label: String
+
+    var body: some View {
+        HStack(spacing: 10) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(color.opacity(0.1))
+                    .frame(width: 24, height: 24)
+                Image(systemName: icon)
+                    .font(.system(size: 10.5, weight: .semibold))
+                    .foregroundStyle(color)
+            }
+            Text(label)
+                .font(.system(size: 12))
+                .foregroundStyle(.primary)
+            Spacer()
+        }
+    }
+}
+
+private struct AboutInfoRow: View {
     let label: String
     let value: String
 
     var body: some View {
         HStack {
             Text(label)
-                .font(.subheadline)
+                .font(.system(size: 12.5))
                 .foregroundStyle(.secondary)
             Spacer()
             Text(value)
-                .font(.subheadline)
+                .font(.system(size: 12.5))
+                .foregroundStyle(.primary)
+                .multilineTextAlignment(.trailing)
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, 18)
         .padding(.vertical, 10)
     }
 }
 
-private struct AboutLink: View {
+private struct AboutLinkRow: View {
     let icon: String
+    let color: Color
     let label: String
     let url: String
-
-    @State private var isHovered = false
+    @State private var hovered = false
 
     var body: some View {
         Link(destination: URL(string: url)!) {
             HStack(spacing: 12) {
-                Image(systemName: icon)
-                    .font(.system(size: 13))
-                    .foregroundStyle(.tint)
-                    .frame(width: 24)
-
+                ZStack {
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .fill(color.opacity(0.1))
+                        .frame(width: 28, height: 28)
+                    Image(systemName: icon)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(color)
+                }
                 Text(label)
-                    .font(.subheadline)
+                    .font(.system(size: 13))
                     .foregroundStyle(.primary)
-
                 Spacer()
-
                 Image(systemName: "arrow.up.right")
-                    .font(.system(size: 11))
+                    .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(.tertiary)
             }
-            .padding(.horizontal, 20)
+            .padding(.horizontal, 14)
             .padding(.vertical, 10)
+            .background(hovered ? Color.primary.opacity(0.04) : Color.clear)
             .contentShape(Rectangle())
-            .background(isHovered ? Color.primary.opacity(0.06) : Color.clear)
         }
         .buttonStyle(.plain)
-        .onHover { isHovered = $0 }
+        .onHover { hovered = $0 }
     }
 }

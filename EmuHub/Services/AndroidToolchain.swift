@@ -26,6 +26,25 @@ struct AndroidToolchain {
     var emulatorPath: String { "\(sdkPath)/emulator/emulator" }
     var adbPath: String { "\(sdkPath)/platform-tools/adb" }
 
+    /// Resolves `avdmanager` from cmdline-tools (any installed version) or the legacy tools dir.
+    var avdmanagerPath: String? {
+        let fm = FileManager.default
+        let cmdlineBase = "\(sdkPath)/cmdline-tools"
+        if let versions = try? fm.contentsOfDirectory(atPath: cmdlineBase) {
+            let ordered = versions.sorted {
+                if $0 == "latest" { return true }
+                if $1 == "latest" { return false }
+                return $0 > $1
+            }
+            for v in ordered {
+                let candidate = "\(cmdlineBase)/\(v)/bin/avdmanager"
+                if fm.fileExists(atPath: candidate) { return candidate }
+            }
+        }
+        let legacy = "\(sdkPath)/tools/bin/avdmanager"
+        return fm.fileExists(atPath: legacy) ? legacy : nil
+    }
+
     init(sdkPath userProvided: String) throws {
         guard let resolved = Self.resolveSdkPath(preferred: userProvided) else {
             throw ToolchainError.sdkNotFound

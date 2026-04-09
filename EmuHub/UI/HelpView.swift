@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-// MARK: - Data Model
+// MARK: - Data Models
 
 private struct HelpItem: Identifiable {
     let id = UUID()
@@ -18,31 +18,34 @@ private struct HelpItem: Identifiable {
 private struct HelpSection: Identifiable {
     let id = UUID()
     let icon: String
+    let iconColor: Color
     let title: String
     let items: [HelpItem]
 }
 
 private let helpSections: [HelpSection] = [
     HelpSection(
-        icon: "play.circle",
+        icon: "play.circle.fill",
+        iconColor: .green,
         title: "Getting Started",
         items: [
             HelpItem(
                 question: "How do I start an emulator?",
-                answer: "Click the EmuHub icon in your macOS menu bar. Under the Available section, you'll see a list of your Android Virtual Devices (AVDs). Click on any AVD name to launch it. The emulator will appear in the Running section once it's active."
+                answer: "Click the EmuHub icon in your macOS menu bar. Under the Available section you'll see your Android Virtual Devices (AVDs). Click any AVD's Launch button. The emulator will appear in the Running section once it's active."
             ),
             HelpItem(
                 question: "How do I stop a running emulator?",
-                answer: "In the Running section of the menu, click Stop next to the emulator you want to shut down. EmuHub sends an adb emu kill command to cleanly terminate it."
+                answer: "In the Running section, hover over the emulator row and click the Stop button that appears. EmuHub sends an adb emu kill command to cleanly terminate the process."
             ),
             HelpItem(
                 question: "Why don't I see any AVDs in the menu?",
-                answer: "EmuHub needs a valid Android SDK path to detect your AVDs. Open Settings and verify the SDK Path is set correctly. The default location is ~/Library/Android/sdk. After updating it, use Refresh Now or wait for the next auto-refresh."
+                answer: "EmuHub needs a valid Android SDK path to detect your AVDs. Open Settings and verify the SDK Path is correct. The default location is ~/Library/Android/sdk. Tap Auto-detect to have EmuHub try to find it automatically, then use Refresh Now to reload the list."
             ),
         ]
     ),
     HelpSection(
-        icon: "wrench.and.screwdriver",
+        icon: "wrench.and.screwdriver.fill",
+        iconColor: .orange,
         title: "Troubleshooting",
         items: [
             HelpItem(
@@ -50,30 +53,31 @@ private let helpSections: [HelpSection] = [
                 answer: "EmuHub tries to auto-detect your SDK at ~/Library/Android/sdk. If you installed Android Studio to a custom location, open Settings → Android SDK and enter the correct path manually. The path should point to the root sdk folder that contains platform-tools, emulator, and avd subdirectories."
             ),
             HelpItem(
-                question: "My physical device shows as 'unauthorized'",
-                answer: "This means USB debugging hasn't been approved for this Mac. Unlock your device, look for the 'Allow USB Debugging?' prompt on screen, and tap Allow. If the prompt doesn't appear, try unplugging and replugging the cable. Make sure USB debugging is enabled in Developer Options on your device."
+                question: "My physical device shows as 'Unauthorized'",
+                answer: "This means USB debugging hasn't been approved for this Mac. Unlock your device and look for the 'Allow USB Debugging?' prompt on screen, then tap Allow. If the prompt doesn't appear, try unplugging and replugging the cable. Make sure USB debugging is enabled in Developer Options."
             ),
             HelpItem(
-                question: "My physical device shows as 'offline'",
-                answer: "The device is connected but adb can't communicate with it. Try unplugging and replugging the cable, or run adb kill-server && adb start-server in Terminal to reset the adb daemon. Also check that your USB cable supports data transfer (not just charging)."
+                question: "My physical device shows as 'Offline'",
+                answer: "The device is connected but adb can't communicate with it. Try unplugging and replugging the cable, or run adb kill-server && adb start-server in Terminal to reset the adb daemon. Also check that your USB cable supports data transfer, not just charging."
             ),
             HelpItem(
-                question: "The emulator list isn't updating",
-                answer: "Use the Refresh Now button in Settings to force an immediate update. You can also lower the auto-refresh interval in Settings → Refresh. If the issue persists, check that adb is accessible — EmuHub uses the adb binary inside your SDK's platform-tools folder."
+                question: "The device list isn't updating",
+                answer: "Use Refresh Now in Settings to force an immediate update, or lower the auto-refresh interval. If the issue persists, check that adb is accessible — EmuHub uses the adb binary inside your SDK's platform-tools folder."
             ),
             HelpItem(
-                question: "macOS says EmuHub can't be opened because it's from an unidentified developer",
+                question: "macOS says EmuHub can't be opened",
                 answer: "EmuHub is signed with an Apple Personal Team certificate and is not notarized. To open it: right-click EmuHub.app → Open → Open. Alternatively, go to System Settings → Privacy & Security and click Open Anyway. You only need to do this once."
             ),
         ]
     ),
     HelpSection(
-        icon: "gearshape",
+        icon: "gearshape.fill",
+        iconColor: .blue,
         title: "Configuration",
         items: [
             HelpItem(
-                question: "What are Extra Args for the emulator?",
-                answer: "Extra Args are additional command-line flags passed to the emulator at launch. Common examples include -no-snapshot-load to always do a cold boot, and -gpu host to use your Mac's GPU for rendering. You can combine multiple flags separated by spaces."
+                question: "What are Extra Launch Arguments?",
+                answer: "Extra Args are additional command-line flags passed to the emulator at launch. Common examples: -no-snapshot-load to always cold-boot, -gpu host to use your Mac's GPU, -no-audio to disable audio. Separate multiple flags with spaces."
             ),
             HelpItem(
                 question: "How does auto-refresh work?",
@@ -81,7 +85,7 @@ private let helpSections: [HelpSection] = [
             ),
             HelpItem(
                 question: "Can I control physical Android devices through EmuHub?",
-                answer: "No — physical devices are shown for visibility only. EmuHub intentionally treats them as read-only to prevent accidental actions on real hardware. You can see their connection state, but start and stop actions are only available for emulators."
+                answer: "No — physical devices are shown for visibility only. EmuHub intentionally treats them as read-only to prevent accidental actions on real hardware. You can see their connection state, but start and stop actions are available only for emulators."
             ),
         ]
     ),
@@ -90,14 +94,12 @@ private let helpSections: [HelpSection] = [
 // MARK: - Main View
 
 struct HelpView: View {
-
     var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 22) {
                 ForEach(helpSections) { section in
                     HelpSectionView(section: section)
                 }
-
                 SupportLinksView()
             }
             .padding(16)
@@ -111,21 +113,24 @@ private struct HelpSectionView: View {
     let section: HelpSection
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             // Section header
-            HStack(spacing: 6) {
-                Image(systemName: section.icon)
-                    .font(.caption)
-                    .foregroundStyle(.tint)
-                Text(section.title)
-                    .font(.caption)
-                    .fontWeight(.semibold)
+            HStack(spacing: 7) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 5, style: .continuous)
+                        .fill(section.iconColor.opacity(0.12))
+                        .frame(width: 20, height: 20)
+                    Image(systemName: section.icon)
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(section.iconColor)
+                }
+                Text(section.title.uppercased())
+                    .font(.system(size: 10.5, weight: .semibold, design: .rounded))
                     .foregroundStyle(.secondary)
-                    .textCase(.uppercase)
-                    .kerning(0.4)
+                    .kerning(0.5)
             }
 
-            // Items
+            // Accordion items
             VStack(spacing: 1) {
                 ForEach(section.items) { item in
                     HelpAccordionRow(item: item)
@@ -133,6 +138,10 @@ private struct HelpSectionView: View {
             }
             .background(.background.secondary, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .strokeBorder(Color.primary.opacity(0.06), lineWidth: 1)
+            )
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -142,15 +151,14 @@ private struct HelpSectionView: View {
 
 private struct HelpAccordionRow: View {
     let item: HelpItem
-    @State private var isExpanded = false
-    @State private var isHovered = false
+    @State private var expanded = false
+    @State private var hovered = false
 
     var body: some View {
         VStack(spacing: 0) {
-            // Question row
             Button {
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                    isExpanded.toggle()
+                    expanded.toggle()
                 }
             } label: {
                 HStack(alignment: .center, spacing: 10) {
@@ -159,27 +167,23 @@ private struct HelpAccordionRow: View {
                         .foregroundStyle(.primary)
                         .multilineTextAlignment(.leading)
                         .fixedSize(horizontal: false, vertical: true)
-
                     Spacer(minLength: 8)
-
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 11, weight: .semibold))
+                        .font(.system(size: 10, weight: .semibold))
                         .foregroundStyle(.tertiary)
-                        .rotationEffect(.degrees(isExpanded ? 90 : 0))
-                        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: isExpanded)
+                        .rotationEffect(.degrees(expanded ? 90 : 0))
+                        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: expanded)
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
                 .contentShape(Rectangle())
-                .background(isHovered && !isExpanded ? Color.primary.opacity(0.04) : Color.clear)
+                .background(hovered && !expanded ? Color.primary.opacity(0.035) : Color.clear)
             }
             .buttonStyle(.plain)
-            .onHover { isHovered = $0 }
+            .onHover { hovered = $0 }
 
-            // Answer
-            if isExpanded {
-                Divider()
-                    .padding(.horizontal, 16)
+            if expanded {
+                Divider().padding(.horizontal, 16)
 
                 Text(item.answer)
                     .font(.subheadline)
@@ -199,36 +203,42 @@ private struct HelpAccordionRow: View {
 
 private struct SupportLinksView: View {
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 6) {
-                Image(systemName: "ellipsis.bubble")
-                    .font(.caption)
-                    .foregroundStyle(.tint)
-                Text("Still need help?")
-                    .font(.caption)
-                    .fontWeight(.semibold)
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 7) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 5, style: .continuous)
+                        .fill(Color.purple.opacity(0.12))
+                        .frame(width: 20, height: 20)
+                    Image(systemName: "ellipsis.bubble.fill")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(.purple)
+                }
+                Text("Still Need Help?".uppercased())
+                    .font(.system(size: 10.5, weight: .semibold, design: .rounded))
                     .foregroundStyle(.secondary)
-                    .textCase(.uppercase)
-                    .kerning(0.4)
+                    .kerning(0.5)
             }
 
             VStack(spacing: 1) {
                 SupportLinkRow(
-                    icon: "ladybug",
+                    icon: "ladybug.fill",
+                    iconColor: .red,
                     label: "Report a Bug",
                     subtitle: "Open a GitHub issue",
                     url: "https://github.com/Munyaradzi-Chigangawa/EmuHub/issues/new"
                 )
                 Divider().padding(.leading, 44)
                 SupportLinkRow(
-                    icon: "lightbulb",
+                    icon: "lightbulb.fill",
+                    iconColor: .yellow,
                     label: "Request a Feature",
                     subtitle: "Share your ideas on GitHub",
                     url: "https://github.com/Munyaradzi-Chigangawa/EmuHub/issues/new"
                 )
                 Divider().padding(.leading, 44)
                 SupportLinkRow(
-                    icon: "doc.text",
+                    icon: "doc.text.fill",
+                    iconColor: .blue,
                     label: "View Changelog",
                     subtitle: "See what's new in each release",
                     url: "https://github.com/Munyaradzi-Chigangawa/EmuHub/blob/main/CHANGELOG.md"
@@ -236,6 +246,10 @@ private struct SupportLinksView: View {
             }
             .background(.background.secondary, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .strokeBorder(Color.primary.opacity(0.06), lineWidth: 1)
+            )
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -243,18 +257,23 @@ private struct SupportLinksView: View {
 
 private struct SupportLinkRow: View {
     let icon: String
+    let iconColor: Color
     let label: String
     let subtitle: String
     let url: String
-    @State private var isHovered = false
+    @State private var hovered = false
 
     var body: some View {
         Link(destination: URL(string: url)!) {
             HStack(spacing: 12) {
-                Image(systemName: icon)
-                    .font(.system(size: 13))
-                    .foregroundStyle(.tint)
-                    .frame(width: 20)
+                ZStack {
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .fill(iconColor.opacity(0.12))
+                        .frame(width: 28, height: 28)
+                    Image(systemName: icon)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(iconColor)
+                }
 
                 VStack(alignment: .leading, spacing: 1) {
                     Text(label)
@@ -268,15 +287,15 @@ private struct SupportLinkRow: View {
                 Spacer()
 
                 Image(systemName: "arrow.up.right")
-                    .font(.system(size: 11))
+                    .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(.tertiary)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
             .contentShape(Rectangle())
-            .background(isHovered ? Color.primary.opacity(0.06) : Color.clear)
+            .background(hovered ? Color.primary.opacity(0.05) : Color.clear)
         }
         .buttonStyle(.plain)
-        .onHover { isHovered = $0 }
+        .onHover { hovered = $0 }
     }
 }

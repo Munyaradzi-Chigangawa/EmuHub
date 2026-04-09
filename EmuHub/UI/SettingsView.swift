@@ -12,77 +12,190 @@ struct SettingsView: View {
     var preferredWidth: CGFloat? = 560
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 22) {
+                generalSection
+                sdkSection
+                emulatorSection
+                refreshSection
+            }
+            .padding(20)
+        }
+        .frame(width: preferredWidth)
+        .onAppear { state.refreshLaunchAtLoginState() }
+    }
 
-                // MARK: General
-                SettingsSection(title: "General") {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Toggle("Launch at Login", isOn: launchAtLoginBinding)
-                        Text("Automatically start EmuHub when you log in to macOS.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .padding(.leading, 2)
+    // MARK: - General
 
-                        if let launchAtLoginError = state.launchAtLoginError {
-                            Text(launchAtLoginError)
-                                .font(.caption)
-                                .foregroundStyle(.red)
-                                .padding(.leading, 2)
-                        }
-                    }
+    private var generalSection: some View {
+        PrefsSection(title: "General") {
+            PrefsRow(
+                icon: "arrow.circlepath",
+                iconColor: .blue,
+                title: "Launch at Login",
+                description: "Start EmuHub automatically when you log in"
+            ) {
+                Toggle("", isOn: launchAtLoginBinding)
+                    .labelsHidden()
+                    .disabled(state.launchAtLoginError != nil && !state.launchAtLoginEnabled)
+            }
+
+            if let err = state.launchAtLoginError {
+                HStack(spacing: 6) {
+                    Image(systemName: "exclamationmark.circle")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.orange)
+                    Text(err)
+                        .font(.caption)
+                        .foregroundStyle(.orange)
                 }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 10)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+    }
 
-                // MARK: Android SDK
-                SettingsSection(title: "Android SDK") {
-                    VStack(alignment: .leading, spacing: 6) {
-                        TextField("SDK Path", text: $state.sdkPath)
-                            .textFieldStyle(.roundedBorder)
-                        Text("Example: ~/Library/Android/sdk")
-                            .font(.caption)
+    // MARK: - SDK
+
+    private var sdkSection: some View {
+        PrefsSection(title: "Android SDK") {
+            VStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "folder")
+                            .font(.system(size: 11, weight: .medium))
                             .foregroundStyle(.secondary)
-                    }
-                }
-
-                // MARK: Emulator
-                SettingsSection(title: "Emulator") {
-                    VStack(alignment: .leading, spacing: 6) {
-                        TextField("Extra Args", text: $state.emulatorExtraArgs)
-                            .textFieldStyle(.roundedBorder)
-                        Text("Example: -no-snapshot-load -gpu host")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-
-                // MARK: Refresh
-                SettingsSection(title: "Refresh") {
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack {
-                            Text("Auto-refresh interval")
-                                .font(.subheadline)
-                            Spacer()
-                            Text("Every \(Int(state.autoRefreshSeconds))s")
-                                .font(.subheadline.monospacedDigit())
-                                .foregroundStyle(.secondary)
-                        }
-                        Slider(value: $state.autoRefreshSeconds, in: 3...60, step: 1)
-
-                        Button("Refresh Now") {
-                            Task { await state.refreshAll() }
+                        Text("SDK Path")
+                            .font(.system(size: 12, weight: .medium))
+                        Spacer()
+                        Button("Auto-detect") {
+                            let path = AndroidToolchain.defaultMacSdkPath()
+                            state.sdkPath = path
                         }
                         .buttonStyle(.bordered)
                         .controlSize(.small)
+                        .font(.system(size: 11))
+                    }
+                    TextField("~/Library/Android/sdk", text: $state.sdkPath)
+                        .textFieldStyle(.roundedBorder)
+                        .font(.system(size: 12, design: .monospaced))
+                    Text("Root folder containing platform-tools, emulator, and avd directories.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(16)
+            }
+        }
+    }
+
+    // MARK: - Emulator
+
+    private var emulatorSection: some View {
+        PrefsSection(title: "Emulator") {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 6) {
+                    Image(systemName: "terminal")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.secondary)
+                    Text("Extra Launch Arguments")
+                        .font(.system(size: 12, weight: .medium))
+                    Spacer()
+                    Button("Reset") {
+                        state.emulatorExtraArgs = "-no-snapshot-load"
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .font(.system(size: 11))
+                }
+                TextField("-no-snapshot-load -gpu host", text: $state.emulatorExtraArgs)
+                    .textFieldStyle(.roundedBorder)
+                    .font(.system(size: 12, design: .monospaced))
+                Text("Flags passed to the emulator binary at launch. Separate multiple flags with spaces.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Text("Common: -no-snapshot-load · -gpu host · -no-audio · -wipe-data")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                    .padding(.top, 1)
+            }
+            .padding(16)
+        }
+    }
+
+    // MARK: - Refresh
+
+    private var refreshSection: some View {
+        PrefsSection(title: "Refresh") {
+            VStack(spacing: 0) {
+                PrefsRow(
+                    icon: "clock.arrow.circlepath",
+                    iconColor: .purple,
+                    title: "Auto-refresh interval",
+                    description: "How often EmuHub polls adb for changes"
+                ) {
+                    Text("Every \(Int(state.autoRefreshSeconds))s")
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                        .frame(minWidth: 60, alignment: .trailing)
+                }
+
+                VStack(spacing: 4) {
+                    Slider(value: $state.autoRefreshSeconds, in: 3...60, step: 1)
+                        .tint(.purple)
+                    HStack {
+                        Text("3s")
+                        Spacer()
+                        Text("30s")
+                        Spacer()
+                        Text("60s")
+                    }
+                    .font(.system(size: 10))
+                    .foregroundStyle(.tertiary)
+                }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 14)
+
+                Divider().padding(.horizontal, 16)
+
+                HStack {
+                    Button {
+                        Task { await state.refreshAll() }
+                    } label: {
+                        HStack(spacing: 6) {
+                            if state.isRefreshing {
+                                ProgressView().controlSize(.small)
+                            } else {
+                                Image(systemName: "arrow.clockwise")
+                                    .font(.system(size: 11, weight: .semibold))
+                            }
+                            Text(state.isRefreshing ? "Refreshing…" : "Refresh Now")
+                                .font(.system(size: 12, weight: .medium))
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.regular)
+                    .disabled(state.isRefreshing)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+
+                    Spacer()
+
+                    if let last = state.lastRefreshAt {
+                        TimelineView(.periodic(from: .now, by: 10)) { _ in
+                            Text("Last: \(relativeTime(from: last))")
+                                .font(.caption)
+                                .foregroundStyle(.tertiary)
+                        }
+                        .padding(.trailing, 16)
                     }
                 }
             }
-            .padding(24)
-        }
-        .frame(width: preferredWidth)
-        .onAppear {
-            state.refreshLaunchAtLoginState()
         }
     }
+
+    // MARK: - Helpers
 
     private var launchAtLoginBinding: Binding<Bool> {
         Binding(
@@ -91,37 +204,73 @@ struct SettingsView: View {
         )
     }
 
-    private var appVersion: String {
-        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "-"
-        return "\(version)"
+    private func relativeTime(from date: Date) -> String {
+        let secs = Int(-date.timeIntervalSinceNow)
+        if secs < 5  { return "just now" }
+        if secs < 60 { return "\(secs)s ago" }
+        return "\(secs / 60)m ago"
     }
 }
 
-// MARK: - Reusable Section Container
+// MARK: - Reusable Components
 
-private struct SettingsSection<Content: View>: View {
+private struct PrefsSection<Content: View>: View {
     let title: String
     @ViewBuilder let content: () -> Content
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(title)
-                .font(.caption)
-                .fontWeight(.semibold)
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title.uppercased())
+                .font(.system(size: 10.5, weight: .semibold, design: .rounded))
                 .foregroundStyle(.secondary)
-                .textCase(.uppercase)
                 .kerning(0.5)
 
-            content()
-                .padding(16)
-                .background(.background.secondary, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            VStack(spacing: 0) {
+                content()
+            }
+            .background(.background.secondary, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .strokeBorder(Color.primary.opacity(0.06), lineWidth: 1)
+            )
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
+}
 
-    private var appVersion: String {
-        let short = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "-"
-        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "-"
-        return "\(short) (\(build))"
+private struct PrefsRow<Accessory: View>: View {
+    let icon: String
+    let iconColor: Color
+    let title: String
+    var description: String? = nil
+    @ViewBuilder let accessory: () -> Accessory
+
+    var body: some View {
+        HStack(spacing: 12) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(iconColor.opacity(0.12))
+                    .frame(width: 28, height: 28)
+                Image(systemName: icon)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(iconColor)
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 13, weight: .medium))
+                if let desc = description {
+                    Text(desc)
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Spacer()
+
+            accessory()
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 11)
     }
 }
