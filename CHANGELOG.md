@@ -11,15 +11,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Planned
 - Developer ID signing and macOS notarization
-- Homebrew cask installation 
-- Advanced emulator controls (cold boot, wipe data)
-- Grouped display of emulators and physical devices
-- In-app help for USB debugging authorization
-- Improved diagnostics and logging
+- Homebrew cask installation
+- ADB port forwarding management panel
+- Clipboard sync between Mac and connected device
+- Device log (logcat) viewer accessible from the running device card
+- Advanced emulator controls (snapshot save/load)
+- Keyboard shortcut to open the menu bar popover
+- Notification when a long-booting emulator becomes ready
+
+---
+
+## [1.2.0] - 2026-04-09
+
+### Added
+- **Create AVD** — New dedicated page (tap `+` next to the Available header) for creating Android Virtual Devices without opening Android Studio or Terminal.
+  - System image picker — scans `$SDK/system-images/` for installed images, sorted by API level (newest first), showing type (Google APIs / Google Play / AOSP) and ABI.
+  - Hardware profile picker — populated via `avdmanager list device`, with Pixel 7 pre-selected when available.
+  - Name field auto-replaces spaces with underscores to satisfy `avdmanager` naming rules; live preview shows the final name.
+  - Resolves `avdmanager` from `cmdline-tools/latest`, any versioned cmdline-tools directory, or the legacy `tools/bin` path.
+  - Inline spinner while creation runs; green success banner and automatic AVD list refresh on completion.
+- **Screenshot capture** — Camera button (fade-in on hover) on any running device card saves a PNG to the Desktop and reveals it in Finder.
+- **Cold Boot & Wipe Data & Boot** — Right-click an AVD card to cold-boot (`-no-snapshot-load`) or wipe and boot (`-wipe-data`). Duplicate flags between shortcut and user-configured extra args are deduplicated automatically.
+- **APK drag-and-drop install** — Drop any `.apk` onto a running device card. A blue drop-target border and overlay appear during the drag; an inline spinner replaces card actions while the install runs; a success banner confirms completion.
+- **AVD search/filter** — Magnifying glass icon in the Available header toggles a search field. Typed text filters the list in real time (case-insensitive). Dismissing or clearing the field collapses it automatically.
+- **Transient action feedback** — Green `ActionBanner` above the device list confirms operations (screenshot, APK install, AVD creation) and auto-dismisses after 3 seconds.
+- **Physical device name resolution** — Authorized physical devices now show the resolved model name (e.g., "Pixel 8 Pro") and Android version fetched via `adb shell getprop`.
+- **Running emulator identification** — Running emulators display the AVD name (e.g., "Pixel 7") resolved via `adb emu avd name` instead of "Android Emulator".
+- **Device property caching** — Physical device properties are cached in-session to avoid repeated adb queries on every auto-refresh.
+- **Concurrent device enrichment** — Model name, Android version, and AVD name queries run concurrently via `withTaskGroup`.
+- **Device-type-aware icons** — AVD cards display icons and accent colors by form factor: phone (blue), tablet (indigo), TV (purple), Wear OS (pink), Automotive (green), Foldable (orange).
+- **Running emulator port display** — Emulator status includes the adb port (e.g., "Emulator running · port 5554").
+
+### Changed
+- AVD cards expose a right-click context menu with Launch, Cold Boot, and Wipe Data & Boot.
+- Physical device cards show the resolved model name as the primary label and Android version + state as the subtitle.
+- Running emulator cards show the resolved AVD name instead of a generic label.
+- AVD subtitle reflects the device category (e.g., "API 34 · Virtual Device", "API 33 · Android TV").
+- Launch button accent color matches the device-type color.
+- `stop()` error message explicitly references USB cable and USB debugging for clearer guidance.
+- `AppRoute` uses an explicit `menuItems` array so the Create AVD route does not appear in the hamburger menu.
+- `Shell.run` accepts an optional `stdin: Data?` parameter used when running `avdmanager create avd`.
+
+### Fixed
+- Empty strings from `adb shell getprop` are treated as missing rather than displayed as blank labels.
+- Device enrichment is skipped for offline and unauthorized devices, preventing adb timeout delays during refresh.
 
 ---
 
 ## [1.1.4] - 2026-02-20
+
 ### Added
 - In-app **Check for Updates** flow from the quick actions menu.
 - GitHub Releases integration (`/releases/latest`) to compare the installed app version against the newest published release.
@@ -32,7 +72,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - "Check for Updates" now handles equal versions gracefully by showing that the user already has the latest version.
 - Prevented false-positive update prompts caused by release metadata suffixes like `+build` or `-beta`.
 
+---
+
 ## [1.1.3] - 2026-02-05
+
 ### Added
 - Added an **About** section in Settings with:
   - App identity text
@@ -48,7 +91,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Fixed
 - Improved physical-device status pill labeling to correctly show **Authorize**, **Offline**, or **Connected** instead of overly generic state wording.
 
+---
+
 ## [1.1.2] - 2026-02-05
+
 ### Added
 - Automated macOS CI build using GitHub Actions
 - Automatic version tagging based on app version
@@ -69,6 +115,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ---
 
 ## [1.1.0] - 2026-02-05
+
 ### Added
 - Display of connected physical Android devices alongside emulators
 - Clear differentiation between Android emulators and physical devices
@@ -88,6 +135,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ---
 
 ## [1.0.0] - 2026-01-29
+
 ### Added
 - Initial public release of EmuHub
 - macOS menu bar application for managing Android Emulators (AVDs)
