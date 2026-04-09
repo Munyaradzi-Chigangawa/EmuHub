@@ -12,151 +12,266 @@ struct CheckForUpdatesPage: View {
     @Environment(\.openURL) private var openURL
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 20) {
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 16) {
 
-                // MARK: - Header Card
-                VStack(spacing: 12) {
-                    Image(systemName: "arrow.trianglehead.2.clockwise.rotate.90.circle.fill")
-                        .font(.system(size: 48))
-                        .foregroundStyle(.tint)
+                // MARK: Header
+                UpdatePageHeader()
 
-                    VStack(spacing: 4) {
-                        Text("Check for Updates")
-                            .font(.title2.weight(.bold))
-
-                        Text("EmuHub compares your current version with the latest release to ensure you're up to date.")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
-                    }
+                // MARK: Update progress banner
+                if state.isUpdating, let stage = state.updateStage {
+                    UpdateProgressBanner(stage: stage)
                 }
-                .frame(maxWidth: .infinity)
-                .padding(24)
-                .background(cardBackground)
 
-                // MARK: - Error
-                if let updateError = state.updateError {
+                // MARK: Error
+                if let err = state.updateError {
                     HStack(spacing: 10) {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundStyle(.red)
-                        Text(updateError)
+                        Text(err)
                             .font(.subheadline)
                             .foregroundStyle(.red)
+                            .fixedSize(horizontal: false, vertical: true)
                         Spacer()
                     }
                     .padding(14)
                     .background(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(Color.red.opacity(0.08))
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(Color.red.opacity(0.07))
                             .overlay(
-                                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                    .strokeBorder(Color.red.opacity(0.2), lineWidth: 1)
+                                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                    .strokeBorder(Color.red.opacity(0.18), lineWidth: 1)
                             )
                     )
                 }
 
-                // MARK: - Update Result
+                // MARK: Version card
                 if let result = state.updateCheckResult {
-                    VStack(spacing: 0) {
-                        // Version rows
-                        versionRow(
-                            label: "Installed",
-                            value: result.currentVersion,
-                            icon: "checkmark.seal.fill",
-                            iconColor: .secondary
-                        )
+                    UpdateResultCard(result: result, openURL: openURL)
+                }
 
-                        Divider().padding(.leading, 44)
-
-                        versionRow(
-                            label: "Latest",
-                            value: result.latestVersion,
-                            icon: "tag.fill",
-                            iconColor: result.hasUpdate ? .orange : .green
-                        )
-
-                        Divider().padding(.leading, 44)
-
-                        // Status row
-                        HStack(spacing: 12) {
-                            Image(systemName: result.hasUpdate ? "arrow.down.circle.fill" : "checkmark.circle.fill")
-                                .font(.system(size: 18))
-                                .foregroundStyle(result.hasUpdate ? .orange : .green)
-                                .frame(width: 24)
-
-                            Text(result.hasUpdate ? "A new version is available" : "You're up to date")
-                                .font(.subheadline.weight(.medium))
-                                .foregroundStyle(result.hasUpdate ? .orange : .green)
-
-                            Spacer()
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 14)
-                    }
-                    .background(cardBackground)
-
-                    // Action buttons
-                    HStack(spacing: 10) {
-                        Button {
-                            openURL(result.releaseNotesURL)
-                        } label: {
-                            Label("Release Notes", systemImage: "doc.text")
-                                .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(.bordered)
-                        .controlSize(.large)
-
-                        if result.hasUpdate, let downloadURL = result.downloadURL {
-                            Button {
-                                openURL(downloadURL)
-                            } label: {
-                                Label("Download", systemImage: "arrow.down.circle.fill")
-                                    .frame(maxWidth: .infinity)
+                // MARK: Primary action
+                if let result = state.updateCheckResult, result.hasUpdate,
+                   let downloadURL = result.downloadURL {
+                    // Auto-update button
+                    Button {
+                        Task { await state.applyUpdate(downloadURL: downloadURL) }
+                    } label: {
+                        HStack(spacing: 8) {
+                            if state.isUpdating {
+                                ProgressView().controlSize(.small).tint(.white)
+                            } else {
+                                Image(systemName: "arrow.down.circle.fill")
+                                    .font(.system(size: 13, weight: .semibold))
                             }
-                            .buttonStyle(.borderedProminent)
-                            .controlSize(.large)
+                            Text(state.isUpdating
+                                 ? (state.updateStage ?? "Updating…")
+                                 : "Update Now")
+                                .fontWeight(.semibold)
                         }
+                        .frame(maxWidth: .infinity)
                     }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .disabled(state.isUpdating)
+
+                    // Fallback: open in browser
+                    Button {
+                        openURL(downloadURL)
+                    } label: {
+                        Text("Download manually")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(state.isUpdating)
+                } else {
+                    // Check now button
+                    Button {
+                        Task { await state.checkForUpdates() }
+                    } label: {
+                        HStack(spacing: 8) {
+                            if state.isCheckingForUpdates {
+                                ProgressView().controlSize(.small).tint(.white)
+                            } else {
+                                Image(systemName: "arrow.clockwise")
+                                    .font(.system(size: 13, weight: .semibold))
+                            }
+                            Text(state.isCheckingForUpdates ? "Checking…" : "Check Now")
+                                .fontWeight(.semibold)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .disabled(state.isCheckingForUpdates)
                 }
 
-                // MARK: - Check Button
-                Button {
-                    Task { await state.checkForUpdates() }
-                } label: {
-                    HStack(spacing: 8) {
-                        if state.isCheckingForUpdates {
-                            ProgressView()
-                                .controlSize(.small)
-                                .tint(.white)
-                        }
-                        Text(state.isCheckingForUpdates ? "Checking…" : "Check Now")
-                            .fontWeight(.medium)
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                .disabled(state.isCheckingForUpdates)
-
+                // MARK: Note
+                Text("EmuHub replaces itself in-place and relaunches automatically. No data is sent from your device.")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                    .multilineTextAlignment(.center)
             }
             .padding(20)
         }
+        .task {
+            if state.updateCheckResult == nil && !state.isCheckingForUpdates {
+                await state.checkForUpdates()
+            }
+        }
     }
+}
 
-    // MARK: - Helpers
+// MARK: - Progress Banner
 
-    private var cardBackground: some View {
-        RoundedRectangle(cornerRadius: 14, style: .continuous)
-            .fill(Color.primary.opacity(0.04))
-            .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
+private struct UpdateProgressBanner: View {
+    let stage: String
+
+    var body: some View {
+        HStack(spacing: 12) {
+            ProgressView()
+                .controlSize(.small)
+                .tint(.blue)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Installing Update")
+                    .font(.system(size: 12, weight: .semibold))
+                Text(stage)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color.blue.opacity(0.07))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .strokeBorder(Color.blue.opacity(0.18), lineWidth: 1)
+                )
+        )
+        .transition(.move(edge: .top).combined(with: .opacity))
+    }
+}
+
+// MARK: - Header
+
+private struct UpdatePageHeader: View {
+    var body: some View {
+        VStack(spacing: 10) {
+            ZStack {
+                Circle()
+                    .fill(LinearGradient(
+                        colors: [.blue.opacity(0.12), .cyan.opacity(0.12)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ))
+                    .frame(width: 64, height: 64)
+
+                Image(systemName: "arrow.trianglehead.2.clockwise.rotate.90.circle.fill")
+                    .font(.system(size: 36))
+                    .foregroundStyle(LinearGradient(
+                        colors: [.blue, .cyan],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ))
+            }
+
+            VStack(spacing: 4) {
+                Text("Software Update")
+                    .font(.headline)
+
+                Text("EmuHub can update itself automatically — no manual download required.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 20)
+        .padding(.horizontal, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color.primary.opacity(0.03))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .strokeBorder(Color.primary.opacity(0.07), lineWidth: 1)
+                )
+        )
+    }
+}
+
+// MARK: - Update Result Card
+
+private struct UpdateResultCard: View {
+    let result: UpdateCheckResult
+    let openURL: OpenURLAction
+
+    var body: some View {
+        VStack(spacing: 0) {
+            VersionRow(
+                icon: "checkmark.seal.fill",
+                iconColor: .secondary,
+                label: "Installed",
+                value: result.currentVersion
             )
-    }
 
-    @ViewBuilder
-    private func versionRow(label: String, value: String, icon: String, iconColor: Color) -> some View {
+            Divider().padding(.leading, 44)
+
+            VersionRow(
+                icon: "tag.fill",
+                iconColor: result.hasUpdate ? .orange : .green,
+                label: "Latest",
+                value: result.latestVersion
+            )
+
+            Divider().padding(.leading, 44)
+
+            HStack(spacing: 12) {
+                Image(systemName: result.hasUpdate ? "arrow.down.circle.fill" : "checkmark.circle.fill")
+                    .font(.system(size: 18))
+                    .foregroundStyle(result.hasUpdate ? .orange : .green)
+                    .frame(width: 24)
+
+                Text(result.hasUpdate ? "A new version is available" : "You're up to date")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(result.hasUpdate ? .orange : .green)
+
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(Color.primary.opacity(0.03))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .strokeBorder(Color.primary.opacity(0.07), lineWidth: 1)
+                )
+        )
+
+        // Release notes link (always available)
+        Button {
+            openURL(result.releaseNotesURL)
+        } label: {
+            Label("View Release Notes", systemImage: "doc.text")
+                .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.bordered)
+        .controlSize(.large)
+    }
+}
+
+private struct VersionRow: View {
+    let icon: String
+    let iconColor: Color
+    let label: String
+    let value: String
+
+    var body: some View {
         HStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.system(size: 16))
@@ -170,7 +285,7 @@ struct CheckForUpdatesPage: View {
             Spacer()
 
             Text(value)
-                .font(.subheadline.weight(.medium))
+                .font(.subheadline.weight(.semibold))
                 .monospacedDigit()
         }
         .padding(.horizontal, 16)
