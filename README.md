@@ -48,7 +48,7 @@ Click the menu bar icon, launch an AVD, and monitor every connected device. That
 2. Unzip and drag **EmuHub.app** into your **Applications** folder
 3. On first launch, remove the quarantine attribute:
 
-```bash
+``` bash
 sudo xattr -dr com.apple.quarantine /Applications/EmuHub.app
 ```
 
