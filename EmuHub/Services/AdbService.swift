@@ -14,20 +14,13 @@ struct AdbService {
     func listRunning(adbPath: String) async throws -> [RunningDevice] {
         _ = try? await Shell.run(adbPath, ["start-server"])
 
-        let res = try await Shell.run(adbPath, ["devices"])
-        let lines = res.stdout.split(whereSeparator: \.isNewline).map(String.init)
+        // `-l` adds product/model/transport_id metadata; transport_id is used for
+        // deduplication of wireless TLS serials that share a normalized base serial.
+        let res = try await Shell.run(adbPath, ["devices", "-l"])
 
-        return lines
-            .dropFirst()
-            .compactMap { line -> RunningDevice? in
-                let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !trimmed.isEmpty else { return nil }
-
-                let parts = trimmed.split(whereSeparator: \.isWhitespace).map(String.init)
-                guard parts.count >= 2 else { return nil }
-
-                return RunningDevice(serial: parts[0], state: parts[1])
-            }
+        return ADBParser
+            .deduplicate(ADBParser.parseOutput(res.stdout))
+            .map { RunningDevice(serial: $0.serial, state: $0.state) }
     }
 
     // MARK: - Emulator Control

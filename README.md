@@ -21,11 +21,17 @@ Click the menu bar icon, launch an AVD, and monitor every connected device. That
 - Running emulators display their resolved AVD name (e.g., "Pixel 7") and active port
 
 ### Physical Device Visibility
-- Automatically detects connected physical Android devices over USB
+- Automatically detects connected physical Android devices over **USB** or **Wi-Fi** (ADB wireless debugging)
 - Displays the real device model name (e.g., "Pixel 8 Pro") fetched via `adb shell getprop`
 - Shows the Android version for each authorized device
 - Correct tablet icon shown when the connected device is a tablet
 - Clear status labels for unauthorized and offline devices with actionable guidance
+- Connection type (USB / Wi-Fi) shown in the device status badge
+
+### Keyboard Shortcut
+- Press **⌥⌘X** (Option + Command + X) from anywhere to open or close the EmuHub popover
+- Works globally when EmuHub is in the background (requires Accessibility permission in System Settings → Privacy & Security)
+- Also works locally to dismiss the popover when it is already open (no extra permission needed)
 
 ### Settings & Configuration
 - Auto-detect Android SDK path, or configure it manually
@@ -67,7 +73,7 @@ Then open EmuHub normally from Applications.
 | Android SDK | Installed at `~/Library/Android/sdk` (auto-detected) |
 | adb | Included in `platform-tools` inside the SDK |
 | Android Emulator | Included in `emulator` inside the SDK |
-| Physical devices | Optional — USB debugging must be enabled |
+| Physical devices | Optional — USB or Wi-Fi (ADB wireless debugging) |
 
 ---
 
@@ -88,7 +94,12 @@ Then open EmuHub normally from Applications.
 - The device model name (e.g., "Samsung Galaxy S24") and Android version are shown
 - Physical devices are **read-only** — Stop and Launch actions are not available for real hardware
 - If a device shows **Unauthorized**, unlock the device and tap **Allow** on the USB debugging prompt
-- If a device shows **Offline**, try a different cable or run `adb kill-server` in Terminal
+- If a device shows **Offline**, try a different cable (USB) or check your network (Wi-Fi), then run `adb kill-server` in Terminal
+- If a Wi-Fi device appears twice, EmuHub automatically deduplicates the entries and shows only one
+
+### Keyboard Shortcut
+- Press **⌥⌘X** from anywhere to open or close EmuHub instantly
+- To enable the global shortcut (opening from background): go to **System Settings → Privacy & Security → Accessibility** and enable EmuHub
 
 ### Software Update
 - Open the menu (≡ icon) → **Software Update**
@@ -103,11 +114,14 @@ EmuHub intentionally treats physical devices as **read-only** to prevent acciden
 
 | State | Meaning | Action Required |
 |---|---|---|
-| Connected | USB debugging authorized | None — device is visible |
+| USB connected | USB debugging authorized over cable | None — device is visible |
+| Wi-Fi connected | Wireless debugging active (Android 11+) | None — device is visible |
 | Unauthorized | USB debugging prompt pending | Tap **Allow** on the device |
-| Offline | adb can't reach the device | Check USB cable; try `adb kill-server` |
+| Offline (USB) | adb can't reach the device over cable | Check USB cable; try `adb kill-server` |
+| Offline (Wi-Fi) | adb can't reach the device over Wi-Fi | Check network connection; try `adb kill-server` |
 
-To remove a device from the list: unplug the USB cable or disable USB debugging on the device.
+To remove a USB device from the list: unplug the cable or disable USB debugging.
+To remove a Wi-Fi device from the list: disable Wireless Debugging in Developer Options.
 
 EmuHub fetches the device model and Android version via `adb shell getprop` and caches the result in-session — no repeated queries on each auto-refresh.
 
@@ -170,6 +184,7 @@ EmuHub/
 │   └── RunningDevice.swift  # Connected device model (emulator or physical)
 ├── Services/
 │   ├── AdbService.swift     # adb device listing, stop, property queries
+│   ├── ADBParser.swift      # adb output parser, serial normalizer, deduplicator
 │   ├── EmulatorService.swift# AVD listing and launch
 │   ├── AndroidToolchain.swift # SDK path resolution
 │   ├── Shell.swift          # Async process execution
@@ -188,10 +203,7 @@ EmuHub/
 
 See [CHANGELOG.md](CHANGELOG.md) for what's been released. Planned features include:
 
-- APK install via drag-and-drop onto a device card
-- Screenshot capture shortcut (saves to Desktop)
 - ADB port forwarding management panel
-- Cold boot / wipe data shortcuts directly on AVD cards
 - Device log (logcat) viewer
 - Clipboard sync between Mac and Android device
 - Homebrew cask installation

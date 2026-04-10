@@ -2,7 +2,7 @@
 //  ReleaseUpdateService.swift
 //  EmuHub
 //
-//  Created by Codex on 20/2/2026.
+//  Created by Munyaradzi Chigangawa on 20/2/2026.
 //
 
 import Foundation
