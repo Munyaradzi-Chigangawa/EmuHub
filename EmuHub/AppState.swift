@@ -44,8 +44,37 @@ final class AppState: ObservableObject {
     private var refreshTask: Task<Void, Never>?
     private var actionFeedbackTask: Task<Void, Never>?
 
+    private var hotKeyMonitors: [Any] = []
+
     init() {
         refreshLaunchAtLoginState()
+        registerHotKey()
+    }
+
+    // MARK: - Global Hot Key (⌥⌘X)
+
+    /// Registers a global + local keyboard shortcut (⌥⌘X) that toggles the menu bar popover.
+    /// The global monitor fires when EmuHub is in the background (opening the popover).
+    /// The local monitor fires when the popover is already open (closing it).
+    /// Note: the global monitor requires Accessibility permission in System Settings.
+    private func registerHotKey() {
+        let toggle: (NSEvent) -> Void = { event in
+            guard event.modifierFlags.intersection([.command, .option, .control, .shift]) == [.option, .command],
+                  event.charactersIgnoringModifiers?.lowercased() == "x" else { return }
+            // statusItems is ObjC-only; access via KVC since the Swift overlay doesn't expose it
+            guard let items = NSStatusBar.system.value(forKey: "statusItems") as? [NSStatusItem],
+                  let button = items.first?.button else { return }
+            button.performClick(nil)
+        }
+
+        if let global = NSEvent.addGlobalMonitorForEvents(matching: .keyDown, handler: toggle) {
+            hotKeyMonitors.append(global)
+        }
+        let local = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            toggle(event)
+            return event
+        }
+        hotKeyMonitors.append(local as Any)
     }
 
     // MARK: - Auto Refresh
@@ -200,7 +229,9 @@ final class AppState: ObservableObject {
 
     func stop(device: RunningDevice) async {
         guard device.isEmulator else {
-            lastError = "This is a physical device. To remove it from the list, unplug the USB cable or disable USB debugging."
+            lastError = device.connectionType == .wifi
+                ? "This is a physical device. To remove it, disable Wireless Debugging on the device."
+                : "This is a physical device. To remove it, unplug the USB cable or disable USB debugging."
             return
         }
 
