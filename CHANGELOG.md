@@ -16,8 +16,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Clipboard sync between Mac and connected device
 - Device log (logcat) viewer accessible from the running device card
 - Advanced emulator controls (snapshot save/load)
-- Keyboard shortcut to open the menu bar popover
 - Notification when a long-booting emulator becomes ready
+
+---
+
+## [1.2.2] - 2026-04-10
+
+### Added
+- **Global keyboard shortcut (⌥⌘X)** — Press Option+Command+X from anywhere to open or close the EmuHub menu bar popover. The global shortcut (opening from background) requires Accessibility permission in System Settings; the local shortcut (closing when popover is open) works without any extra permission.
+- **Wi-Fi device detection** — Physical devices connected via ADB Wireless Debugging (Android 11+ TLS pairing, serial format `adb-…._adb-tls-connect._tcp`) and legacy `adb connect` (IP:port) are now correctly labelled **Wi-Fi connected** instead of USB. Offline status messages also distinguish the connection type.
+
+### Fixed
+- **ADB device parser rewritten** — replaced naive whitespace splitting with a regex-anchored parser that correctly handles serials containing spaces (e.g., ADB TLS wireless serials like `adb-XYZ (2)._adb-tls-connect._tcp`). The old parser would truncate these serials at the first space, causing Wi-Fi devices to fall through to USB classification.
+- **Wireless serial normalization** — the ` (N)` duplicate-session suffix that ADB TLS can append when the same device opens a second connection is now stripped before classification and deduplication, so `adb-XYZ (2)._adb-tls-connect._tcp` and `adb-XYZ._adb-tls-connect._tcp` are treated as one device.
+- **Duplicate device entries eliminated** — deduplication now operates on normalized serials; when two entries share a canonical serial the one with the higher `transport_id` (most recent connection) is kept.
+- **Connection-aware removal guidance** — the error shown when a user tries to stop a physical device now says "disable Wireless Debugging" for Wi-Fi devices instead of always saying "unplug the USB cable".
 
 ---
 
