@@ -1160,10 +1160,15 @@ extension RunningDevice {
             }
         }
         if isUnauthorized { return "Tap 'Allow' on your device to authorize USB debugging" }
-        if isOffline      { return "Device offline — check USB cable" }
+        if isOffline {
+            return connectionType == .wifi
+                ? "Device offline — check Wi-Fi connection"
+                : "Device offline — check USB cable"
+        }
         if state == "device" {
             let ver = androidVersion.map { "Android \($0) · " } ?? ""
-            return "\(ver)USB connected · read-only"
+            let conn = connectionType == .wifi ? "Wi-Fi connected" : "USB connected"
+            return "\(ver)\(conn) · read-only"
         }
         return state.capitalized
     }
