@@ -159,7 +159,7 @@ Separate multiple flags with spaces.
 
 ### Built With
 
-- **Swift 5** · **SwiftUI**
+- **Swift 6** · **SwiftUI**
 - **macOS MenuBarExtra API** (window style)
 - **Android adb** and **Emulator CLI** tools
 
