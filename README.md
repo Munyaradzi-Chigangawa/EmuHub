@@ -155,6 +155,27 @@ Separate multiple flags with spaces.
 
 ---
 
+
+## GitHub Actions Workflows
+
+EmuHub currently ships with three CI/CD workflows:
+
+| Workflow | Trigger | What it does |
+|---|---|---|
+| **CI (macOS Build)** (`.github/workflows/ci.yaml`) | Pushes to `main` and all pull requests | Builds the app in **Debug** mode without code signing, packages `EmuHub.app` into `EmuHub-Debug.zip`, and uploads it as a short-lived artifact (14 days). |
+| **Auto Tag (from app version)** (`.github/workflows/auto-tag.yaml`) | Pushes to `main` | Reads `MARKETING_VERSION` from the Xcode project and creates/pushes a matching `vX.Y.Z` Git tag if it does not already exist. |
+| **Release (macOS)** (`.github/workflows/release.yaml`) | Push of tags matching `v*.*.*` | Builds in **Release** mode without code signing, zips the app as `EmuHub-<tag>.zip`, and creates a GitHub Release with that zip attached. |
+
+### Release Flow
+
+1. A change merged to `main` updates `MARKETING_VERSION` in Xcode when needed.
+2. **Auto Tag** creates `v<MARKETING_VERSION>` if missing.
+3. The new tag triggers **Release**, which builds and publishes the release asset.
+
+> **Required repository secrets:** `RELEASE_TOKEN` (for creating/pushing tags from the workflow).
+
+---
+
 ## Development
 
 ### Built With
